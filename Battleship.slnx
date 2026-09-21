@@ -4,4 +4,8 @@
     <Project Path="src/Battleship.Domain/Battleship.Domain.csproj" />
     <Project Path="src/Battleship.Infrastructure/Battleship.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Battleship.Api.IntegrationTests/Battleship.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Battleship.Domain.Tests/Battleship.Domain.Tests.csproj" />
+  </Folder>
 </Solution>
