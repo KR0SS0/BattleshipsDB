@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: battleship
+      POSTGRES_PASSWORD: battleship
+      POSTGRES_DB: battleship
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - battleship-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U battleship -d battleship"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  battleship-pgdata:
