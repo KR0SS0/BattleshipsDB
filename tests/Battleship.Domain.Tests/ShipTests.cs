@@ -45,9 +45,11 @@ public class ShipTests
     [Fact]
     public void Ships_WithSameValues_AreEqual()
     {
+        // Arrange
         var a = new Ship(ShipType.Cruiser, new Coordinate(2, 2), Orientation.Vertical);
         var b = new Ship(ShipType.Cruiser, new Coordinate(2, 2), Orientation.Vertical);
 
+        // Assert
         Assert.Equal(a, b);
     }
 }
