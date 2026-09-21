@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Battleship.Domain\Battleship.Domain.csproj" />
+    <ProjectReference Include="..\Battleship.Infrastructure\Battleship.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Battleship.Api/Battleship.Api.csproj" />
+    <Project Path="src/Battleship.Domain/Battleship.Domain.csproj" />
+    <Project Path="src/Battleship.Infrastructure/Battleship.Infrastructure.csproj" />
+  </Folder>
+</Solution>
