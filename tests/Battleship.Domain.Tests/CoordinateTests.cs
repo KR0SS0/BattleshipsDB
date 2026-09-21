@@ -20,6 +20,27 @@ public class CoordinateTests
     }
 
     [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("A")]
+    [InlineData("A0")]
+    [InlineData("€11")]
+    [InlineData("1B")]
+    [InlineData("A 1")]
+    [InlineData("A-1")]
+    public void TryParse_InvalidInput_ReturnsFalse(string? input)
+    {
+        // Act
+        var result = Coordinate.TryParse(input, out var coordinate);
+
+        // Assert
+        Assert.False(result);
+        Assert.Equal(default, coordinate);
+    }
+
+
+    [Theory]
     [InlineData(0, 0, "A1")]
     [InlineData(3, 0, "D1")]
     [InlineData(2, 4, "C5")]
