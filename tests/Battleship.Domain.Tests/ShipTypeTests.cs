@@ -1,4 +1,4 @@
-namespace Battleship.Domain;
+namespace Battleship.Domain.Tests;
 
 public class ShipTypeTests
 {
