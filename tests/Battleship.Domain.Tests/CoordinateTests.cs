@@ -2,11 +2,28 @@ namespace Battleship.Domain.Tests;
 
 public class CoordinateTests
 {
+
     [Theory]
-    [InlineData(0, 1, "A1")]
-    [InlineData(3, 1, "D1")]
-    [InlineData(2, 4, "C4")]
-    [InlineData(9, 10, "J10")]
+    [InlineData(0, 0, "A1")]
+    [InlineData(3, 0, "D1")]
+    [InlineData(2, 4, "C5")]
+    [InlineData(9, 9, "J10")]
+    public void TryParse_ValidInput_ReturnsValue(int expectedColumn, int expectedRow, string input)
+    {
+        // Act
+        var result = Coordinate.TryParse(input, out var coordinate);
+
+        // Assert
+        Assert.True(result);
+        Assert.Equal(expectedColumn, coordinate.Column);
+        Assert.Equal(expectedRow, coordinate.Row);
+    }
+
+    [Theory]
+    [InlineData(0, 0, "A1")]
+    [InlineData(3, 0, "D1")]
+    [InlineData(2, 4, "C5")]
+    [InlineData(9, 9, "J10")]
     public void ToString_FormatsCorrectly(int column, int row, string expected)
     {
         // Arrange
