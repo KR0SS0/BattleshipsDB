@@ -46,7 +46,7 @@ public class BoardTests()
         var board = new Board();
         var shipA = new Ship(ShipType.Submarine, new Coordinate(1, 1), Orientation.Vertical);
         var shipB = new Ship(ShipType.Submarine, new Coordinate(5, 5), Orientation.Horizontal);
-       
+
         // Act
         board.PlaceShip(shipA);
         var result = board.PlaceShip(shipB);
@@ -145,4 +145,82 @@ public class BoardTests()
         Assert.True(second.IsSuccess);
         Assert.Equal(2, board.Ships.Count);
     }
+
+    [Fact]
+    public void ReceiveShot_AlreadyShotThisSpace_FailsWithAlreadyShotSpace()
+    {
+        // Arrange
+        var board = new Board();
+        var coordinate = new Coordinate(1, 1);
+
+        // Act
+        board.ReceiveShot(coordinate);
+        var result = board.ReceiveShot(coordinate);
+
+        // Assert
+        Assert.Equal(ShotErrors.AlreadyShotSpace, result.Error);
+    }
+
+    [Fact]
+    public void ReceiveShot_ShootingEmptySpot_Misses()
+    {
+        // Arrange
+        var board = new Board();
+        var coordinate = new Coordinate(2, 4);
+
+        // Act
+        var result = board.ReceiveShot(coordinate);
+
+        // Assert
+        Assert.Equal(ShotOutcome.Miss, result.Value.Outcome);
+    }
+
+    [Fact]
+    public void ReceiveShot_ShootingBattleship_Hits()
+    {
+        // Arrange
+        var board = new Board();
+        var coordinate = new Coordinate(2, 2);
+        var ship = new Ship(ShipType.Battleship, coordinate, Orientation.Horizontal);
+
+        // Act
+        board.PlaceShip(ship);
+        var result = board.ReceiveShot(coordinate);
+
+        // Assert
+        Assert.Equal(ShotOutcome.Hit, result.Value.Outcome);
+    }
+
+    [Fact]
+    public void ReceiveShot_ShootAllShipCoordinates_ReturnsSunkenShip()
+    {
+        // Arrange
+        var board = new Board();
+        var ship = new Ship(ShipType.Destroyer, new Coordinate(3, 3), Orientation.Horizontal);
+
+        // Act
+        board.PlaceShip(ship);
+        board.ReceiveShot(new Coordinate(3, 3));
+        var result = board.ReceiveShot(new Coordinate(4, 3));
+
+        // Assert
+        Assert.Equal(ShotOutcome.Sunk, result.Value.Outcome);
+        Assert.Equal(ShipType.Destroyer, result.Value.SunkShipType);
+    }
+
+    [Fact]
+    public void ReceiveShot_ShootingOutOfBounds_FailsWithOutOfBounds()
+    {
+        // Arrange
+        var board = new Board();
+        var coordinate = new Coordinate(Board.Size, Board.Size + 1);
+
+        // Act
+        var result = board.ReceiveShot(coordinate);
+
+        // Assert
+        Assert.Equal(ShotErrors.OutOfBounds, result.Error);
+    }
+
+    [Fact]
 }
