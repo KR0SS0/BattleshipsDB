@@ -1,6 +1,6 @@
 namespace Battleship.Domain.Tests;
 
-public class BoardTests()
+public class BoardTests
 {
     [Theory]
     [InlineData(0, 0, true)]
