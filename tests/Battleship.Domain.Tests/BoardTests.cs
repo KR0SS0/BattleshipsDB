@@ -223,4 +223,83 @@ public class BoardTests()
     }
 
     [Fact]
+    public void AreAllShipsPlaced_ReturnsTrue()
+    {
+        var board = new Board();
+
+        board.PlaceShip(new Ship(ShipType.Battleship, new Coordinate(1, 1), Orientation.Horizontal));
+        Assert.False(board.AreAllShipsPlaced);
+
+        board.PlaceShip(new Ship(ShipType.Carrier, new Coordinate(2, 2), Orientation.Horizontal));
+        board.PlaceShip(new Ship(ShipType.Cruiser, new Coordinate(3, 3), Orientation.Horizontal));
+        board.PlaceShip(new Ship(ShipType.Destroyer, new Coordinate(1, 2), Orientation.Vertical));
+        Assert.False(board.AreAllShipsPlaced);
+
+        board.PlaceShip(new Ship(ShipType.Submarine, new Coordinate(2, 3), Orientation.Vertical));
+        Assert.True(board.AreAllShipsPlaced);
+    }
+
+    [Fact]
+    public void AreAllShipsSunk_EmptyBoard_ReturnsFalse()
+    {
+        // Arrange
+        var board = new Board();
+
+        // Assert
+        Assert.False(board.AreAllShipsSunk);
+    }
+
+    [Fact]
+    public void AreAllShipsSunk_ShipNotFullyHit_ReturnsFalse()
+    {
+        // Arrange
+        var board = new Board();
+        var ship = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
+        Assert.True(board.PlaceShip(ship).IsSuccess);
+
+        // Act
+        board.ReceiveShot(new Coordinate(0, 0));
+
+        // Assert
+        Assert.False(board.AreAllShipsSunk);
+    }
+
+    [Fact]
+    public void AreAllShipsSunk_OneOfTwoShipsStillAfloat_ReturnsFalse()
+    {
+        // Arrange
+        var board = new Board();
+        var destroyer = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
+        var submarine = new Ship(ShipType.Submarine, new Coordinate(0, 5), Orientation.Horizontal);
+        Assert.True(board.PlaceShip(destroyer).IsSuccess);
+        Assert.True(board.PlaceShip(submarine).IsSuccess);
+
+        // Act
+        board.ReceiveShot(new Coordinate(0, 0));
+        board.ReceiveShot(new Coordinate(1, 0));
+
+        // Assert
+        Assert.False(board.AreAllShipsSunk);
+    }
+
+    [Fact]
+    public void AreAllShipsSunk_EveryPlacedShipFullyHit_ReturnsTrue()
+    {
+        // Arrange
+        var board = new Board();
+        var destroyer = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
+        var submarine = new Ship(ShipType.Submarine, new Coordinate(0, 5), Orientation.Horizontal);
+        Assert.True(board.PlaceShip(destroyer).IsSuccess);
+        Assert.True(board.PlaceShip(submarine).IsSuccess);
+
+        // Act
+        board.ReceiveShot(new Coordinate(0, 0));
+        board.ReceiveShot(new Coordinate(1, 0));
+        board.ReceiveShot(new Coordinate(0, 5));
+        board.ReceiveShot(new Coordinate(1, 5));
+        board.ReceiveShot(new Coordinate(2, 5));
+
+        // Assert
+        Assert.True(board.AreAllShipsSunk);
+    }
 }

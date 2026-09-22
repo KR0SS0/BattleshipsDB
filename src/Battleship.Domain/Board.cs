@@ -62,4 +62,7 @@ public sealed class Board
             : Shot.Hit());
     }
 
+    public bool AreAllShipsPlaced => Enum.GetValues<ShipType>().All(type => _ships.Any(s => s.Type == type));
+
+    public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(ship => ship.GetCells().All(_shots.Contains));
 }
