@@ -302,4 +302,49 @@ public class BoardTests
         // Assert
         Assert.True(board.AreAllShipsSunk);
     }
+
+    [Fact]
+    public void TryPlaceShipsRandomly_PlacesFullFleet()
+    {
+        // Arrange
+        var board = new Board();
+
+        // Act
+        var result = board.TryPlaceShipsRandomly(new Random(42));
+
+        // Assert
+        Assert.True(result);
+        Assert.True(board.AreAllShipsPlaced);
+        Assert.Equal(5, board.Ships.Count);
+    }
+
+    [Fact]
+    public void TryPlaceShipsRandomly_SameSeed_ProducesSameLayout()
+    {
+        // Arrange
+        var boardA = new Board();
+        var boardB = new Board();
+
+        // Act
+        boardA.TryPlaceShipsRandomly(new Random(42));
+        boardB.TryPlaceShipsRandomly(new Random(42));
+
+        // Assert
+        Assert.Equal(boardA.Ships, boardB.Ships);
+    }
+
+    [Fact]
+    public void TryPlaceShipsRandomly_DifferentSeeds_CanProduceDifferentLayouts()
+    {
+        // Arrange
+        var boardA = new Board();
+        var boardB = new Board();
+
+        // Act
+        boardA.TryPlaceShipsRandomly(new Random(1));
+        boardB.TryPlaceShipsRandomly(new Random(2));
+
+        // Assert
+        Assert.NotEqual(boardA.Ships, boardB.Ships);
+    }
 }

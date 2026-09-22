@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Battleship.Domain;
 
 public sealed class Board
@@ -20,7 +18,7 @@ public sealed class Board
     public Result<Ship> PlaceShip(Ship ship)
     {
         var cells = ship.GetCells();
-        
+
         // In Bounds?
         if (!cells.All(IsInBounds))
             return Result<Ship>.Failure(PlacementErrors.OutOfBounds);
@@ -36,6 +34,48 @@ public sealed class Board
 
         _ships.Add(ship);
         return Result<Ship>.Success(ship);
+    }
+
+    public bool TryPlaceShipsRandomly(Random random)
+    {
+        foreach (var type in Enum.GetValues<ShipType>())
+        {
+            // Every possible placement for this ship type
+            var candidates = (
+                from column in Enumerable.Range(0, Size)
+                from row in Enumerable.Range(0, Size)
+                from orientation in new[] { Orientation.Horizontal, Orientation.Vertical }
+                select new Ship(type, new Coordinate(column, row), orientation)
+            ).ToList();
+
+            Shuffle(candidates, random);
+
+            // Try all candidates
+            var placed = false;
+            foreach (var ship in candidates)
+            {
+                if (!PlaceShip(ship).IsSuccess)
+                    continue;
+
+                placed = true;
+                break;
+            }
+
+            if (!placed)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static void Shuffle<T>(List<T> list, Random random)
+    {
+        // Fisher-Yates
+        for (var i = list.Count - 1; i > 0; i--)
+        {
+            var j = random.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     public Result<Shot> ReceiveShot(Coordinate shotCoordinate)
