@@ -20,9 +20,13 @@ public sealed class Game
         if (!PlayerBoard.AreAllShipsPlaced || !OpponentBoard.AreAllShipsPlaced)
             return Result<Shot>.Failure(GameErrors.ShipsNotPlaced);
 
-        throw new NotImplementedException();
+        var targetBoard = CurrentTurn == Side.Player ? OpponentBoard : PlayerBoard;
+        var result = targetBoard.ReceiveShot(coordinate);
+
+        // Switch whose turn it is  
+        if (result.IsSuccess)
+            CurrentTurn = CurrentTurn == Side.Player ? Side.Opponent : Side.Player;
+
+        return result;
     }
-
-
-
 }
