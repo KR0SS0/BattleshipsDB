@@ -7,6 +7,14 @@ public sealed class Game
     public Side CurrentTurn { get; private set; } = Side.Player;
     public Guid Id { get; } = Guid.NewGuid();
 
+    public Game()
+    {
+    }
+    internal Game(Guid id)
+    {
+        Id = id;
+    }
+
     public Side? Winner =>
         PlayerBoard.AreAllShipsSunk ? Side.Opponent :
         OpponentBoard.AreAllShipsSunk ? Side.Player :

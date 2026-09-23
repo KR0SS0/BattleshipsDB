@@ -1,2 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Battleship.Infrastructure" />
+    <InternalsVisibleTo Include="Battleship.Domain.Tests" />
+  </ItemGroup>
+
 </Project>
