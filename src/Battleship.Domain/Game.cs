@@ -5,6 +5,7 @@ public sealed class Game
     public Board PlayerBoard { get; } = new();
     public Board OpponentBoard { get; } = new();
     public Side CurrentTurn { get; private set; } = Side.Player;
+    public Guid Id { get; } = Guid.NewGuid();
 
     public Side? Winner =>
         PlayerBoard.AreAllShipsSunk ? Side.Opponent :
