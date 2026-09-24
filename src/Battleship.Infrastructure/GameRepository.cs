@@ -22,4 +22,20 @@ public sealed class GameRepository(BattleshipDbContext context)
         if (gameEntity is null) return null;
         return GameMapper.ToGameDomain(gameEntity);
     }
+
+    public async Task SaveShotAsync(Game game, Shot shot, Side targetSide, Coordinate coordinate, CancellationToken cancellationToken)
+    {
+        var gameEntity = context.Games.Local.SingleOrDefault(g => g.Id == game.Id);
+        if (gameEntity is null)
+        {
+            throw new InvalidOperationException(
+                $"Game {game.Id} must be loaded or saved through this repository before saving a shot.");
+        }
+
+        gameEntity.CurrentTurn = game.CurrentTurn;
+        gameEntity.Shots.Add(GameMapper.ToShotEntity(shot, targetSide, coordinate,
+            sequence: gameEntity.Shots.Count + 1));
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }
