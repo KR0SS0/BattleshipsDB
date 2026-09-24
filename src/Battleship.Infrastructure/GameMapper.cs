@@ -34,10 +34,11 @@ public static class GameMapper
         });
     }
 
-    public static ShotEntity ToShotEntity(Shot shot, Side targetSide, Coordinate coordinate)
+    public static ShotEntity ToShotEntity(Shot shot, Side targetSide, Coordinate coordinate, int sequence)
     {
         return new ShotEntity
         {
+            Sequence = sequence,
             TargetedSide = targetSide,
             Column = coordinate.Column,
             Row = coordinate.Row,
@@ -65,7 +66,7 @@ public static class GameMapper
                     $"Failed to rehydrate game {entity.Id}: could not place ship {shipEntity.Type} ({placeResult.Error.Code}).");
         }
 
-        foreach (var shotEntity in entity.Shots.OrderBy(s => s.CreatedAt))
+        foreach (var shotEntity in entity.Shots.OrderBy(s => s.Sequence))
         {
             var coordinate = new Coordinate(shotEntity.Column, shotEntity.Row);
             var shootResult = game.Shoot(coordinate);

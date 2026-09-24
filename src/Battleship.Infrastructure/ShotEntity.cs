@@ -5,6 +5,7 @@ namespace Battleship.Infrastructure;
 public sealed class ShotEntity
 {
     public int Id { get; set; }
+    public int Sequence { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public Side TargetedSide { get; set; }
     public int Column { get; set; }

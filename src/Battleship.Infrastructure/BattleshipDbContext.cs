@@ -57,5 +57,9 @@ public sealed class BattleshipDbContext(DbContextOptions<BattleshipDbContext> op
         modelBuilder.Entity<ShotEntity>()
             .Property(e => e.SunkShipType)
             .HasConversion<string>();
+
+        modelBuilder.Entity<ShotEntity>()
+            .HasIndex(e => new { e.GameId, e.Sequence })
+            .IsUnique();
     }
 }
