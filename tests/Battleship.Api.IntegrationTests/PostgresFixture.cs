@@ -1,8 +1,9 @@
 
 using Battleship.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Testcontainers.PostgreSql;
+
+namespace Battleship.Api.IntegrationTests;
 
 public sealed class PostgresFixture : IAsyncLifetime
 {
@@ -10,23 +11,21 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public string ConnectionString => _postgreSqlContainer.GetConnectionString();
 
+    public BattleshipDbContext CreateContext() =>
+        new(new DbContextOptionsBuilder<BattleshipDbContext>()
+            .UseNpgsql(ConnectionString)
+            .Options);
+
     public async ValueTask InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
 
-        var dbContextFactory = new PooledDbContextFactory<BattleshipDbContext>(
-             new DbContextOptionsBuilder<BattleshipDbContext>()
-            .UseNpgsql(ConnectionString)
-            .Options);
-
-        using var context = dbContextFactory.CreateDbContext();
-
+        await using var context = CreateContext();
         await context.Database.MigrateAsync();
     }
+
     public async ValueTask DisposeAsync()
     {
         await _postgreSqlContainer.DisposeAsync();
     }
 }
-
-

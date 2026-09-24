@@ -1,4 +1,3 @@
-using Battleship.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Battleship.Infrastructure;
