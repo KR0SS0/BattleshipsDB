@@ -4,7 +4,7 @@ namespace Battleship.Infrastructure;
 
 public static class GameMapper
 {
-    public static GameEntity ToNewEntity(Game game)
+    public static GameEntity ToGameEntity(Game game)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -48,7 +48,7 @@ public static class GameMapper
         };
     }
 
-    public static Game ToDomain(GameEntity entity)
+    public static Game ToGameDomain(GameEntity entity)
     {
         var game = new Game(entity.Id);
 

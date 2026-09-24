@@ -4,15 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Battleship.Api.IntegrationTests;
 
-public sealed class GamePersistenceTests : IClassFixture<PostgresFixture>
+public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
 {
-    private readonly PostgresFixture _fixture;
-
-    public GamePersistenceTests(PostgresFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     [Fact]
     public async ValueTask SaveAndReload_IsSameGame()
     {
@@ -33,23 +26,23 @@ public sealed class GamePersistenceTests : IClassFixture<PostgresFixture>
             shotEntities.Add(GameMapper.ToShotEntity(result.Value, targetSide, targets[i], sequence: i + 1));
         }
 
-        var entity = GameMapper.ToNewEntity(game);
+        var entity = GameMapper.ToGameEntity(game);
         entity.Shots.AddRange(shotEntities);
 
         // Act
-        await using (var saveContext = _fixture.CreateContext())
+        await using (var saveContext = fixture.CreateContext())
         {
             saveContext.Games.Add(entity);
             await saveContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
-        await using var loadContext = _fixture.CreateContext();
+        await using var loadContext = fixture.CreateContext();
         var loaded = await loadContext.Games
             .Include(g => g.Ships)
             .Include(g => g.Shots)
             .SingleAsync(g => g.Id == game.Id, TestContext.Current.CancellationToken);
 
-        var reloaded = GameMapper.ToDomain(loaded);
+        var reloaded = GameMapper.ToGameDomain(loaded);
 
         // Assert
         Assert.Equal(targets.Length, loaded.Shots.Count);
