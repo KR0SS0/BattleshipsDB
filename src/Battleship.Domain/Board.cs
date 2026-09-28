@@ -4,7 +4,7 @@ public sealed class Board
 {
     private readonly List<Ship> _ships = [];
     public const int Size = 10;
-    public bool IsInBounds(Coordinate coordinate)
+    public static bool IsInBounds(Coordinate coordinate)
     {
         var columnInBounds = coordinate.Column is >= 0 and < Size;
         var rowInBounds = coordinate.Row is >= 0 and < Size;
@@ -15,6 +15,19 @@ public sealed class Board
     public IReadOnlyList<Ship> Ships => _ships.AsReadOnly();
     private readonly HashSet<Coordinate> _shotCells = [];
     public IReadOnlySet<Coordinate> ShotCells => _shotCells.AsReadOnly();
+    public static IReadOnlyList<Coordinate> AllCells { get; } = CreateAllCells();
+
+    private static IReadOnlyList<Coordinate> CreateAllCells()
+    {
+        List<Coordinate> cells = [];
+        foreach (var column in Enumerable.Range(0, Size))
+            foreach (var row in Enumerable.Range(0, Size))
+                cells.Add(new Coordinate(column, row));
+
+        return cells.AsReadOnly();
+    }
+
+    public IReadOnlyList<Coordinate> UnshotCells() => AllCells.Where(cell => !_shotCells.Contains(cell)).ToList();
 
     public Result<Ship> PlaceShip(Ship ship)
     {
@@ -43,10 +56,9 @@ public sealed class Board
         {
             // Every possible placement for this ship type
             var candidates = (
-                from column in Enumerable.Range(0, Size)
-                from row in Enumerable.Range(0, Size)
+                from cell in AllCells
                 from orientation in new[] { Orientation.Horizontal, Orientation.Vertical }
-                select new Ship(type, new Coordinate(column, row), orientation)
+                select new Ship(type, cell, orientation)
             ).ToList();
 
             Shuffle(candidates, random);

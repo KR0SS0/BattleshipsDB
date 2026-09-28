@@ -72,11 +72,8 @@ public class BoardTests
     [InlineData(0, -1, false)]
     public void IsInBounds_ChecksBothAxes(int column, int row, bool expected)
     {
-        // Arrange
-        var board = new Board();
-
         // Act
-        var result = board.IsInBounds(new Coordinate(column, row));
+        var result = Board.IsInBounds(new Coordinate(column, row));
 
         // Assert
         Assert.Equal(expected, result);
@@ -420,5 +417,39 @@ public class BoardTests
         Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate + (Column: 2, Row: 0)));
         Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate + (Column: 3, Row: 0)));
         Assert.Null(board.ShipAtCoordinate(emptyCellCoordinate));
+    }
+
+    [Fact]
+    public void AllCells_ContainsEveryCellOfTheBoardExactlyOnce()
+    {
+        // Arrange
+        var board = new Board();
+
+        // Act
+        var cells = Board.AllCells;
+
+        // Assert
+        Assert.Equal(Board.Size * Board.Size, cells.Count);
+        Assert.Equal(cells.Count, cells.Distinct().Count());
+        Assert.All(cells, cell => Assert.True(Board.IsInBounds(cell)));
+    }
+
+    [Fact]
+    public void UnshotCells_AfterTwoShots_ExcludesThoseCells()
+    {
+        // Arrange
+        var board = new Board();
+        var first = new Coordinate(0, 0);
+        var second = new Coordinate(4, 7);
+
+        // Act
+        board.ReceiveShot(first);
+        board.ReceiveShot(second);
+        var unshotCells = board.UnshotCells();
+
+        // Assert
+        Assert.Equal(Board.Size * Board.Size - 2, unshotCells.Count);
+        Assert.DoesNotContain(first, unshotCells);
+        Assert.DoesNotContain(second, unshotCells);
     }
 }
