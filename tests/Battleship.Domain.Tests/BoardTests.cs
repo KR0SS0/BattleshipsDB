@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using Xunit.Sdk;
@@ -370,26 +372,20 @@ public class BoardTests
     }
 
     [Fact]
-    public void IsShipSunk_SunkShip_ReturnsTrue()
+    public void IsShipSunk_TrueOnlyAfterEveryCellIsHit()
     {
         // Arrange
         var board = new Board();
         var destroyer = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
         Assert.True(board.PlaceShip(destroyer).IsSuccess);
-        Coordinate[] targets = [new(5, 5), new(0, 0), new(1, 0)];
-        Ship? ship = board.ShipAtCoordinate(targets[0]);
 
-        // Act: Step 1 shoot only one part
-        board.ReceiveShot(targets[1]);
-        Assert.NotNull(ship);
-        Assert.False(board.IsShipSunk(ship));
+        // Act & Assert: first cell hit, ship still afloat
+        board.ReceiveShot(new Coordinate(0, 0));
+        Assert.False(board.IsShipSunk(destroyer));
 
-        // Act: Step 2 shoot all parts of ship
-        board.ReceiveShot(targets[0]);
-        board.ReceiveShot(targets[2]);
-
-        // Assert
-        Assert.True(board.IsShipSunk(ship));
+        // Act & Assert: All cells hit, ship sunk
+        board.ReceiveShot(new Coordinate(1, 0));
+        Assert.True(board.IsShipSunk(destroyer));
     }
 
     [Fact]
@@ -420,6 +416,9 @@ public class BoardTests
 
         // Assert
         Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate));
+        Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate + (Column: 1, Row: 0)));
+        Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate + (Column: 2, Row: 0)));
+        Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate + (Column: 3, Row: 0)));
         Assert.Null(board.ShipAtCoordinate(emptyCellCoordinate));
     }
 }

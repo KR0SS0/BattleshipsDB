@@ -26,5 +26,11 @@ public readonly record struct Coordinate(int Column, int Row)
     {
         return $"{(char)('A' + Column)}{Row + 1}";
     }
+
+    public static Coordinate operator +(Coordinate coordinate, (int Column, int Row) offset) =>
+        new(coordinate.Column + offset.Column, coordinate.Row + offset.Row);
+
+    public static Coordinate operator -(Coordinate coordinate, (int Column, int Row) offset) =>
+        new(coordinate.Column - offset.Column, coordinate.Row - offset.Row);
 }
 
