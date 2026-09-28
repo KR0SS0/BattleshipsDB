@@ -347,4 +347,21 @@ public class BoardTests
         // Assert
         Assert.NotEqual(boardA.Ships, boardB.Ships);
     }
+
+    [Fact]
+    public void ReceiveShot_EveryOutcome_CarriesTheShotCoordinate()
+    {
+        // Arrange
+        var board = new Board();
+        var destroyer = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
+        Assert.True(board.PlaceShip(destroyer).IsSuccess);
+        Coordinate[] targets = [new(5, 5), new(0, 0), new(1, 0)];
+
+        // Act
+        var shots = targets.Select(target => board.ReceiveShot(target).Value).ToList();
+
+        // Assert
+        Assert.Equal([ShotOutcome.Miss, ShotOutcome.Hit, ShotOutcome.Sunk], shots.Select(s => s.Outcome));
+        Assert.Equal(targets, shots.Select(s => s.Coordinate));
+    }
 }

@@ -23,7 +23,7 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
             var result = game.Shoot(targets[i]);
             Assert.True(result.IsSuccess);
 
-            shotEntities.Add(GameMapper.ToShotEntity(result.Value, targetSide, targets[i], sequence: i + 1));
+            shotEntities.Add(GameMapper.ToShotEntity(result.Value, targetSide, sequence: i + 1));
         }
 
         var entity = GameMapper.ToGameEntity(game);
@@ -122,7 +122,7 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
                 var result = loadedGame.Shoot(target);
                 Assert.True(result.IsSuccess);
 
-                await repository.SaveShotAsync(loadedGame, result.Value, targetSide, target, cancellationToken);
+                await repository.SaveShotAsync(loadedGame, result.Value, targetSide, cancellationToken);
             }
         }
 
@@ -161,11 +161,11 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
         var secondShot = secondGame.Shoot(new Coordinate(8, 8));
 
         // Act
-        await firstRepository.SaveShotAsync(firstGame, firstShot.Value, Side.Opponent, new Coordinate(9, 9), cancellationToken);
+        await firstRepository.SaveShotAsync(firstGame, firstShot.Value, Side.Opponent, cancellationToken);
 
         // Assert
         await Assert.ThrowsAnyAsync<DbUpdateException>(() =>
-            secondRepository.SaveShotAsync(secondGame, secondShot.Value, Side.Opponent, new Coordinate(8, 8), cancellationToken));
+            secondRepository.SaveShotAsync(secondGame, secondShot.Value, Side.Opponent, cancellationToken));
 
         await using var checkContext = fixture.CreateContext();
         var savedShotCount = await checkContext.Shots.CountAsync(s => s.GameId == game.Id, cancellationToken);

@@ -1,11 +1,10 @@
 namespace Battleship.Domain;
 
-public sealed record Shot(ShotOutcome Outcome, ShipType? SunkShipType = null)
+public sealed record Shot(Coordinate Coordinate, ShotOutcome Outcome, ShipType? SunkShipType = null)
 {
-    public static Shot Miss() => new(ShotOutcome.Miss);
- 
-    public static Shot Hit() => new(ShotOutcome.Hit);
+    public static Shot Miss(Coordinate coordinate) => new(coordinate, ShotOutcome.Miss);
 
-    public static Shot Sunk(ShipType shipType) => new(ShotOutcome.Sunk, shipType);
+    public static Shot Hit(Coordinate coordinate) => new(coordinate, ShotOutcome.Hit);
 
+    public static Shot Sunk(Coordinate coordinate, ShipType shipType) => new(coordinate, ShotOutcome.Sunk, shipType);
 }

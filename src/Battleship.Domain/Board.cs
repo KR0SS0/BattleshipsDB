@@ -13,7 +13,8 @@ public sealed class Board
     }
 
     public IReadOnlyList<Ship> Ships => _ships.AsReadOnly();
-    private readonly HashSet<Coordinate> _shots = [];
+    private readonly HashSet<Coordinate> _shotCells = [];
+    public IReadOnlySet<Coordinate> ShotCells => _shotCells.AsReadOnly();
 
     public Result<Ship> PlaceShip(Ship ship)
     {
@@ -85,24 +86,24 @@ public sealed class Board
             return Result<Shot>.Failure(ShotErrors.OutOfBounds);
 
         // Already shot here?
-        if (_shots.Contains(shotCoordinate))
+        if (_shotCells.Contains(shotCoordinate))
             return Result<Shot>.Failure(ShotErrors.AlreadyShotSpace);
 
-        _shots.Add(shotCoordinate);
+        _shotCells.Add(shotCoordinate);
 
         // Hit ship?
         var hitShip = _ships.FirstOrDefault(ship => ship.GetCells().Contains(shotCoordinate));
         if (hitShip is null)
-            return Result<Shot>.Success(Shot.Miss());
+            return Result<Shot>.Success(Shot.Miss(shotCoordinate));
 
-        var isSunk = hitShip.GetCells().All(_shots.Contains);
+        var isSunk = hitShip.GetCells().All(_shotCells.Contains);
 
         return Result<Shot>.Success(isSunk
-            ? Shot.Sunk(hitShip.Type)
-            : Shot.Hit());
+            ? Shot.Sunk(shotCoordinate, hitShip.Type)
+            : Shot.Hit(shotCoordinate));
     }
 
     public bool AreAllShipsPlaced => Enum.GetValues<ShipType>().All(type => _ships.Any(s => s.Type == type));
 
-    public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(ship => ship.GetCells().All(_shots.Contains));
+    public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(ship => ship.GetCells().All(_shotCells.Contains));
 }

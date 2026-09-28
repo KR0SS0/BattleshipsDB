@@ -23,7 +23,7 @@ public sealed class GameRepository(BattleshipDbContext context)
         return GameMapper.ToGameDomain(gameEntity);
     }
 
-    public async Task SaveShotAsync(Game game, Shot shot, Side targetSide, Coordinate coordinate, CancellationToken cancellationToken)
+    public async Task SaveShotAsync(Game game, Shot shot, Side targetSide, CancellationToken cancellationToken)
     {
         var gameEntity = context.Games.Local.SingleOrDefault(g => g.Id == game.Id);
         if (gameEntity is null)
@@ -33,7 +33,7 @@ public sealed class GameRepository(BattleshipDbContext context)
         }
 
         gameEntity.CurrentTurn = game.CurrentTurn;
-        gameEntity.Shots.Add(GameMapper.ToShotEntity(shot, targetSide, coordinate,
+        gameEntity.Shots.Add(GameMapper.ToShotEntity(shot, targetSide,
             sequence: gameEntity.Shots.Count + 1));
 
         await context.SaveChangesAsync(cancellationToken);

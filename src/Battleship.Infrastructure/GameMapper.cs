@@ -34,14 +34,14 @@ public static class GameMapper
         });
     }
 
-    public static ShotEntity ToShotEntity(Shot shot, Side targetSide, Coordinate coordinate, int sequence)
+    public static ShotEntity ToShotEntity(Shot shot, Side targetSide, int sequence)
     {
         return new ShotEntity
         {
             Sequence = sequence,
             TargetedSide = targetSide,
-            Column = coordinate.Column,
-            Row = coordinate.Row,
+            Column = shot.Coordinate.Column,
+            Row = shot.Coordinate.Row,
             Outcome = shot.Outcome,
             SunkShipType = shot.SunkShipType,
             CreatedAt = DateTimeOffset.UtcNow,
