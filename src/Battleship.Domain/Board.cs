@@ -92,18 +92,27 @@ public sealed class Board
         _shotCells.Add(shotCoordinate);
 
         // Hit ship?
-        var hitShip = _ships.FirstOrDefault(ship => ship.GetCells().Contains(shotCoordinate));
-        if (hitShip is null)
+        var hitShip = ShipAtCoordinate(shotCoordinate);
+        if(hitShip is null)
             return Result<Shot>.Success(Shot.Miss(shotCoordinate));
 
-        var isSunk = hitShip.GetCells().All(_shotCells.Contains);
-
-        return Result<Shot>.Success(isSunk
+        return Result<Shot>.Success(IsShipSunk(hitShip)
             ? Shot.Sunk(shotCoordinate, hitShip.Type)
             : Shot.Hit(shotCoordinate));
     }
 
+    public Ship? ShipAtCoordinate(Coordinate coordinate)
+    {
+        var foundShip = _ships.FirstOrDefault(ship => ship.GetCells().Contains(coordinate));
+        return foundShip;
+    }
+
+    public bool IsShipSunk(Ship ship)
+    {
+        return ship.GetCells().All(_shotCells.Contains);
+    }
+
     public bool AreAllShipsPlaced => Enum.GetValues<ShipType>().All(type => _ships.Any(s => s.Type == type));
 
-    public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(ship => ship.GetCells().All(_shotCells.Contains));
+    public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(IsShipSunk);
 }

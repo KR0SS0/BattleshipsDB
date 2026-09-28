@@ -1,3 +1,7 @@
+using System.Runtime;
+using System.Runtime.CompilerServices;
+using Xunit.Sdk;
+
 namespace Battleship.Domain.Tests;
 
 public class BoardTests
@@ -363,5 +367,59 @@ public class BoardTests
         // Assert
         Assert.Equal([ShotOutcome.Miss, ShotOutcome.Hit, ShotOutcome.Sunk], shots.Select(s => s.Outcome));
         Assert.Equal(targets, shots.Select(s => s.Coordinate));
+    }
+
+    [Fact]
+    public void IsShipSunk_SunkShip_ReturnsTrue()
+    {
+        // Arrange
+        var board = new Board();
+        var destroyer = new Ship(ShipType.Destroyer, new Coordinate(0, 0), Orientation.Horizontal);
+        Assert.True(board.PlaceShip(destroyer).IsSuccess);
+        Coordinate[] targets = [new(5, 5), new(0, 0), new(1, 0)];
+        Ship? ship = board.ShipAtCoordinate(targets[0]);
+
+        // Act: Step 1 shoot only one part
+        board.ReceiveShot(targets[1]);
+        Assert.NotNull(ship);
+        Assert.False(board.IsShipSunk(ship));
+
+        // Act: Step 2 shoot all parts of ship
+        board.ReceiveShot(targets[0]);
+        board.ReceiveShot(targets[2]);
+
+        // Assert
+        Assert.True(board.IsShipSunk(ship));
+    }
+
+    [Fact]
+    public void ShotCells_ShootingTwice_ReturnsTwo()
+    {
+        // Arrange
+        var board = new Board();
+        int expected = 2;
+
+        // Act
+        board.ReceiveShot(new Coordinate(1, 1));
+        board.ReceiveShot(new Coordinate(3, 2));
+
+        // Assert
+        Assert.Equal(expected, board.ShotCells.Count);
+    }
+
+    [Fact]
+    public void ShipAtCoordinate_Outcome_ReturnsCorrectShip()
+    {
+        // Arrange
+        var board = new Board();
+        var placedShipCoordinate = new Coordinate(1, 1);
+        var emptyCellCoordinate = new Coordinate(4, 4);
+
+        // Act
+        var ship = board.PlaceShip(new Ship(ShipType.Battleship, placedShipCoordinate, Orientation.Horizontal)).Value;
+
+        // Assert
+        Assert.Equal(ship, board.ShipAtCoordinate(placedShipCoordinate));
+        Assert.Null(board.ShipAtCoordinate(emptyCellCoordinate));
     }
 }
