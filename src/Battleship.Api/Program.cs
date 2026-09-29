@@ -71,7 +71,7 @@ app.MapPost("/games/{id:guid}/shots", async Task<Results<Ok<FireShotResponse>, P
     if (!playerResult.IsSuccess)
         return playerResult.Error.ToProblem();
 
-    await repository.SaveShotAsync(game, playerResult.Value, Side.Opponent, cancellationToken);
+    repository.AddShot(game, playerResult.Value, Side.Opponent);
 
     // Opponent shooting player
     ShotResponse? firedByOpponent = null;
@@ -81,10 +81,15 @@ app.MapPost("/games/{id:guid}/shots", async Task<Results<Ok<FireShotResponse>, P
         if (shotAtCell is not null)
         {
             var opponentResult = game.Shoot(shotAtCell.Value);
-            await repository.SaveShotAsync(game, opponentResult.Value, Side.Player, cancellationToken);
+            repository.AddShot(game, opponentResult.Value, Side.Player);
             firedByOpponent = ShotResponse.From(opponentResult.Value);
         }
     }
+
+    // Save shots
+    var saveResult = await repository.SaveChangesAsync(cancellationToken);
+    if (!saveResult.IsSuccess)
+        return saveResult.Error.ToProblem();
 
     return TypedResults.Ok(new FireShotResponse(
         ShotResponse.From(playerResult.Value),

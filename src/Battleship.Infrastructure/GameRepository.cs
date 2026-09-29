@@ -1,5 +1,6 @@
 using Battleship.Domain;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Battleship.Infrastructure;
 
@@ -23,7 +24,7 @@ public sealed class GameRepository(BattleshipDbContext context)
         return GameMapper.ToGameDomain(gameEntity);
     }
 
-    public async Task SaveShotAsync(Game game, Shot shot, Side targetSide, CancellationToken cancellationToken)
+    public void AddShot(Game game, Shot shot, Side targetSide)
     {
         var gameEntity = context.Games.Local.SingleOrDefault(g => g.Id == game.Id);
         if (gameEntity is null)
@@ -35,7 +36,23 @@ public sealed class GameRepository(BattleshipDbContext context)
         gameEntity.CurrentTurn = game.CurrentTurn;
         gameEntity.Shots.Add(GameMapper.ToShotEntity(shot, targetSide,
             sequence: gameEntity.Shots.Count + 1));
+    }
 
-        await context.SaveChangesAsync(cancellationToken);
+    public async Task<Result> SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(PersistenceErrors.ConcurrentUpdate);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return Result.Failure(PersistenceErrors.ConcurrentUpdate);
+        }
+        return Result.Success();
     }
 }

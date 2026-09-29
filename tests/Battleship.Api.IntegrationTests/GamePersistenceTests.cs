@@ -102,7 +102,7 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
     }
 
     [Fact]
-    public async ValueTask SaveShotAsync_TwoShots_AreStoredInOrderAndTurnFollows()
+    public async ValueTask SaveChangesAsync_TwoShots_AreStoredInOrderAndTurnFollows()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -122,7 +122,8 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
                 var result = loadedGame.Shoot(target);
                 Assert.True(result.IsSuccess);
 
-                await repository.SaveShotAsync(loadedGame, result.Value, targetSide, cancellationToken);
+                repository.AddShot(loadedGame, result.Value, targetSide);
+                await repository.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -141,7 +142,7 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
     }
 
     [Fact]
-    public async ValueTask SaveShotAsync_SimultaneousShots_SecondIsRejected()
+    public async ValueTask SaveChangesAsync_SimultaneousShots_SecondIsRejected()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -161,11 +162,16 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
         var secondShot = secondGame.Shoot(new Coordinate(8, 8));
 
         // Act
-        await firstRepository.SaveShotAsync(firstGame, firstShot.Value, Side.Opponent, cancellationToken);
+        firstRepository.AddShot(firstGame, firstShot.Value, Side.Opponent);
+        var firstSave = await firstRepository.SaveChangesAsync(cancellationToken);
+
+        secondRepository.AddShot(secondGame, secondShot.Value, Side.Opponent);
+        var secondSave = await secondRepository.SaveChangesAsync(cancellationToken);
 
         // Assert
-        await Assert.ThrowsAnyAsync<DbUpdateException>(() =>
-            secondRepository.SaveShotAsync(secondGame, secondShot.Value, Side.Opponent, cancellationToken));
+        Assert.True(firstSave.IsSuccess);
+        Assert.False(secondSave.IsSuccess);
+        Assert.Equal(PersistenceErrors.ConcurrentUpdate, secondSave.Error);
 
         await using var checkContext = fixture.CreateContext();
         var savedShotCount = await checkContext.Shots.CountAsync(s => s.GameId == game.Id, cancellationToken);
