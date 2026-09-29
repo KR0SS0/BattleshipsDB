@@ -5,6 +5,7 @@ using Testcontainers.PostgreSql;
 
 namespace Battleship.Api.IntegrationTests;
 
+// Container + migrations
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder("postgres:17-alpine").Build();
