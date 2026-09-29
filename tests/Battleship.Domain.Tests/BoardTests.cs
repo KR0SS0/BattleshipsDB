@@ -1,7 +1,4 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
-using System.Runtime;
-using System.Runtime.CompilerServices;
 using Xunit.Sdk;
 
 namespace Battleship.Domain.Tests;
