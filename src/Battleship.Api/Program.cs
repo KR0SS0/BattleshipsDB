@@ -12,7 +12,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContextPool<BattleshipDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("BattleShipDbContext")));
 builder.Services.AddScoped<GameRepository>();
-builder.Services.AddSingleton<IShotStrategy, RandomShotStrategy>();
+builder.Services.AddSingleton<IShotStrategy, HuntTargetShotStrategy>();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 

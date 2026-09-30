@@ -451,11 +451,12 @@ public class BoardTests
     }
 
     [Fact]
-    public void ShotHistory_MissHitSunk_StoredInOrderWithTypeOnlyWhenSunk()
+    public void ShotHistory_MissHitSunk_StoredInOrderWithShipOnlyWhenSunk()
     {
         // Arrange
         var board = new Board();
-        board.PlaceShip(new Ship(ShipType.Destroyer, new Coordinate(3, 3), Orientation.Horizontal));
+        var destroyer = new Ship(ShipType.Destroyer, new Coordinate(3, 3), Orientation.Horizontal);
+        board.PlaceShip(destroyer);
 
         // Act
         board.ReceiveShot(new Coordinate(0, 0));
@@ -467,7 +468,7 @@ public class BoardTests
             [
                 Shot.Miss(new Coordinate(0, 0)),
                 Shot.Hit(new Coordinate(3, 3)),
-                Shot.Sunk(new Coordinate(4, 3), ShipType.Destroyer)
+                Shot.Sunk(new Coordinate(4, 3), destroyer)
             ],
             board.ShotHistory);
     }

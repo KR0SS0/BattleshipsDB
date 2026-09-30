@@ -111,11 +111,10 @@ public sealed class Board
         Shot shot;
         if (hitShip is null)
             shot = Shot.Miss(shotCoordinate);
-        else      
-            if (IsShipSunk(hitShip))
-                shot = Shot.Sunk(shotCoordinate, hitShip.Type);
-            else
-                shot = Shot.Hit(shotCoordinate);      
+        else if (IsShipSunk(hitShip))
+            shot = Shot.Sunk(shotCoordinate, hitShip);
+        else
+            shot = Shot.Hit(shotCoordinate);      
 
         _shotHistory.Add(shot);
         return Result<Shot>.Success(shot);
