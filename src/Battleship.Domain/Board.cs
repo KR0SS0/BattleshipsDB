@@ -131,6 +131,11 @@ public sealed class Board
         return ship.GetCells().All(_shotCells.Contains);
     }
 
+    internal void ReceiveShot(Coordinate? coordinate)
+    {
+        throw new NotImplementedException();
+    }
+
     public bool AreAllShipsPlaced => Enum.GetValues<ShipType>().All(type => _ships.Any(s => s.Type == type));
 
     public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(IsShipSunk);
