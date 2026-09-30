@@ -42,7 +42,7 @@ public static class GameEndpoints
 
     // Player requests a cell to shoot, the opponent fires back.
     private static async Task<Results<Ok<FireShotResponse>, ProblemHttpResult>> FireShot(
-        Guid id, FireShotRequest request, GameRepository repository, Shooter shooter, CancellationToken cancellationToken)
+        Guid id, FireShotRequest request, GameRepository repository, IShotStrategy shooter, CancellationToken cancellationToken)
     {
         if (!Coordinate.TryParse(request.Cell, out var playerCell))
             return TypedResults.Problem(
@@ -67,7 +67,7 @@ public static class GameEndpoints
         ShotResponse? firedByOpponent = null;
         if (!game.IsOver)
         {
-            var shotAtCell = shooter.RandomShotAtTargetSide(game.PlayerBoard, Random.Shared);
+            var shotAtCell = shooter.ChooseTarget(game.PlayerBoard.ShotHistory, Random.Shared);
             if (shotAtCell is not null)
             {
                 var opponentResult = game.Shoot(shotAtCell.Value);

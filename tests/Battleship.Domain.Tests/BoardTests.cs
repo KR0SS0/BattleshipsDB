@@ -449,4 +449,41 @@ public class BoardTests
         Assert.DoesNotContain(first, unshotCells);
         Assert.DoesNotContain(second, unshotCells);
     }
+
+    [Fact]
+    public void ShotHistory_MissHitSunk_StoredInOrderWithTypeOnlyWhenSunk()
+    {
+        // Arrange
+        var board = new Board();
+        board.PlaceShip(new Ship(ShipType.Destroyer, new Coordinate(3, 3), Orientation.Horizontal));
+
+        // Act
+        board.ReceiveShot(new Coordinate(0, 0));
+        board.ReceiveShot(new Coordinate(3, 3));
+        board.ReceiveShot(new Coordinate(4, 3));
+
+        // Assert
+        Assert.Equal(
+            [
+                Shot.Miss(new Coordinate(0, 0)),
+                Shot.Hit(new Coordinate(3, 3)),
+                Shot.Sunk(new Coordinate(4, 3), ShipType.Destroyer)
+            ],
+            board.ShotHistory);
+    }
+
+    [Fact]
+    public void ShotHistory_FailedShots_AreNotStored()
+    {
+        // Arrange
+        var board = new Board();
+        board.ReceiveShot(new Coordinate(2, 2));
+
+        // Act
+        board.ReceiveShot(new Coordinate(2, 2));
+        board.ReceiveShot(new Coordinate(10, 0));
+
+        // Assert
+        Assert.Single(board.ShotHistory);
+    }
 }

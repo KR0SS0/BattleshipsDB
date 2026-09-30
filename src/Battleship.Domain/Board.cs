@@ -15,6 +15,8 @@ public sealed class Board
     public IReadOnlyList<Ship> Ships => _ships.AsReadOnly();
     private readonly HashSet<Coordinate> _shotCells = [];
     public IReadOnlySet<Coordinate> ShotCells => _shotCells.AsReadOnly();
+    private readonly List<Shot> _shotHistory = [];
+    public IReadOnlyList<Shot> ShotHistory => _shotHistory.AsReadOnly();
     public static IReadOnlyList<Coordinate> AllCells { get; } = CreateAllCells();
 
     private static IReadOnlyList<Coordinate> CreateAllCells()
@@ -105,12 +107,18 @@ public sealed class Board
 
         // Hit ship?
         var hitShip = ShipAtCoordinate(shotCoordinate);
-        if(hitShip is null)
-            return Result<Shot>.Success(Shot.Miss(shotCoordinate));
 
-        return Result<Shot>.Success(IsShipSunk(hitShip)
-            ? Shot.Sunk(shotCoordinate, hitShip.Type)
-            : Shot.Hit(shotCoordinate));
+        Shot shot;
+        if (hitShip is null)
+            shot = Shot.Miss(shotCoordinate);
+        else      
+            if (IsShipSunk(hitShip))
+                shot = Shot.Sunk(shotCoordinate, hitShip.Type);
+            else
+                shot = Shot.Hit(shotCoordinate);      
+
+        _shotHistory.Add(shot);
+        return Result<Shot>.Success(shot);
     }
 
     public Ship? ShipAtCoordinate(Coordinate coordinate)
