@@ -13,6 +13,7 @@ public static class GameMapper
             Id = game.Id,
             CreatedAt = now,
             CurrentTurn = game.CurrentTurn,
+            Difficulty = game.Difficulty,
         };
 
         entity.Ships.AddRange(ToShipEntities(game.PlayerBoard, Side.Player, now));
@@ -50,7 +51,7 @@ public static class GameMapper
 
     public static Game ToGameDomain(GameEntity entity)
     {
-        var game = new Game(entity.Id);
+        var game = new Game(entity.Id, entity.Difficulty);
 
         foreach (var shipEntity in entity.Ships)
         {

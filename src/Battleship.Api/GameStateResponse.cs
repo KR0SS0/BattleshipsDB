@@ -6,6 +6,7 @@ public sealed record GameStateResponse(
     Guid GameId,
     Side Turn,
     Side? Winner,
+    Difficulty Difficulty,
     PlayerBoardResponse PlayerBoard,
     OpponentBoardResponse OpponentBoard) {
 
@@ -14,6 +15,7 @@ public sealed record GameStateResponse(
             game.Id,
             game.CurrentTurn,
             game.Winner,
+            game.Difficulty,
             new PlayerBoardResponse(
                 ShotsReceived: ToShotResponses(game.PlayerBoard),
                 Ships: game.PlayerBoard.Ships

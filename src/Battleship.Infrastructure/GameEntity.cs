@@ -12,4 +12,5 @@ public sealed class GameEntity
 
     public List<ShipEntity> Ships { get; set; } = []; // One (game) to many (ships)
     public List<ShotEntity> Shots { get; set; } = []; // One (game) to many (shots)
+    public Difficulty Difficulty { get; set; }
 }

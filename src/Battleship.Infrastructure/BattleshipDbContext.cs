@@ -26,12 +26,15 @@ public sealed class BattleshipDbContext(DbContextOptions<BattleshipDbContext> op
             .HasForeignKey(e => e.GameId)
             .IsRequired();
 
-
         modelBuilder.Entity<GameEntity>()
             .HasMany(e => e.Shots)
             .WithOne(e => e.Game)
             .HasForeignKey(e => e.GameId)
             .IsRequired();
+
+        modelBuilder.Entity<GameEntity>()
+            .Property(e => e.Difficulty)
+            .HasConversion<string>();
 
         modelBuilder.Entity<ShipEntity>()
             .Property(e => e.Orientation)

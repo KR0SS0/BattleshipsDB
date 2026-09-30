@@ -15,10 +15,17 @@ public static class GameEndpoints
         games.MapPost("/{id:guid}/shots", FireShot);
     }
 
-    private static async Task<Created<GameResponse>> CreateGame(
-        GameRepository repository, CancellationToken cancellationToken)
+    private static async Task<Results<Created<GameResponse>, ProblemHttpResult>> CreateGame(
+        GameRepository repository, CreateGameRequest? request, CancellationToken cancellationToken)
     {
-        Game game = new();
+        var difficulty = request?.Difficulty ?? Game.DefaultDifficulty;
+        if (!Enum.IsDefined(difficulty))
+            return TypedResults.Problem(
+                title: "Invalid difficulty",
+                detail: $"'{difficulty}' is not a difficulty.",
+                statusCode: StatusCodes.Status400BadRequest);
+
+        Game game = new(difficulty);
         game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared);
         game.OpponentBoard.TryPlaceShipsRandomly(Random.Shared);
 
@@ -42,7 +49,7 @@ public static class GameEndpoints
 
     // Player requests a cell to shoot, the opponent fires back.
     private static async Task<Results<Ok<FireShotResponse>, ProblemHttpResult>> FireShot(
-        Guid id, FireShotRequest request, GameRepository repository, IShotStrategy shooter, CancellationToken cancellationToken)
+        Guid id, FireShotRequest request, GameRepository repository, CancellationToken cancellationToken)
     {
         if (!Coordinate.TryParse(request.Cell, out var playerCell))
             return TypedResults.Problem(
@@ -67,7 +74,7 @@ public static class GameEndpoints
         ShotResponse? firedByOpponent = null;
         if (!game.IsOver)
         {
-            var shotAtCell = shooter.ChooseTarget(game.PlayerBoard.ShotHistory, Random.Shared);
+            var shotAtCell = game.Difficulty.ShotStrategy().ChooseTarget(game.PlayerBoard.ShotHistory, Random.Shared);
             if (shotAtCell is not null)
             {
                 var opponentResult = game.Shoot(shotAtCell.Value);

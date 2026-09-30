@@ -10,7 +10,7 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
     public async ValueTask SaveAndReload_IsSameGameInEntityAndDomain()
     {
         // Arrange
-        var game = new Game();
+        var game = new Game(Difficulty.Easy);
         Assert.True(game.PlayerBoard.TryPlaceShipsRandomly(new Random(1)));
         Assert.True(game.OpponentBoard.TryPlaceShipsRandomly(new Random(2)));
 
@@ -54,6 +54,8 @@ public sealed class GamePersistenceTests(PostgresFixture fixture) : IClassFixtur
         Assert.Equal(
             game.OpponentBoard.Ships.OrderBy(s => s.Type),
             gameDomain.OpponentBoard.Ships.OrderBy(s => s.Type));
+        Assert.Equal(game.Difficulty, gameDomain.Difficulty);
+        Assert.Equal(Difficulty.Easy, game.Difficulty);
     }
 
     [Fact]

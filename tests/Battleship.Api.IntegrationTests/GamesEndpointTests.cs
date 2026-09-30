@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Battleship.Domain;
@@ -16,7 +17,7 @@ public sealed class GamesEndpointTests(ApiFixture api) : IClassFixture<ApiFixtur
     };
 
     [Fact]
-    public async ValueTask PostGames_Returns201WithGameIdAndLocation()
+    public async ValueTask CreateGame_Returns201WithGameIdAndLocation()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -30,6 +31,69 @@ public sealed class GamesEndpointTests(ApiFixture api) : IClassFixture<ApiFixtur
         var body = await response.Content.ReadFromJsonAsync<GameResponse>(JsonOptions, cancellationToken);
         Assert.NotNull(body);
         Assert.Equal($"/games/{body.GameId}", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async ValueTask CreateGame_NoBody_UsesDefaultDifficulty()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = api.CreateClient();
+
+        // Act
+        var gameId = await CreateGameAsync(client, cancellationToken);
+
+        // Assert
+        Assert.Equal(Game.DefaultDifficulty, await GetDifficultyAsync(client, gameId, cancellationToken));
+    }
+
+    [Fact]
+    public async ValueTask CreateGame_EmptyJsonObject_UsesDefaultDifficulty()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = api.CreateClient();
+
+        // Act
+        var response = await client.PostAsync("/games", JsonBody("{}"), cancellationToken);
+
+        // Assert
+        var gameId = await ReadGameIdAsync(response, cancellationToken);
+        Assert.Equal(Game.DefaultDifficulty, await GetDifficultyAsync(client, gameId, cancellationToken));
+    }
+
+    [Theory]
+    [InlineData(Difficulty.Easy)]
+    [InlineData(Difficulty.Normal)]
+    public async ValueTask CreateGame_WithDifficulty_GameUsesThatDifficulty(Difficulty difficulty)
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = api.CreateClient();
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            "/games", new CreateGameRequest(difficulty), JsonOptions, cancellationToken);
+
+        // Assert
+        var gameId = await ReadGameIdAsync(response, cancellationToken);
+        Assert.Equal(difficulty, await GetDifficultyAsync(client, gameId, cancellationToken));
+    }
+
+    [Theory]
+    [InlineData("""{ "difficulty": 99 }""")]
+    [InlineData("""{ "difficulty": "ImpossibleValue" }""")]
+    public async ValueTask CreateGame_InvalidDifficulty_Returns400(string json)
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = api.CreateClient();
+
+        // Act
+        var response = await client.PostAsync("/games", JsonBody(json), cancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -164,12 +228,27 @@ public sealed class GamesEndpointTests(ApiFixture api) : IClassFixture<ApiFixtur
     private static async Task<Guid> CreateGameAsync(HttpClient client, CancellationToken cancellationToken)
     {
         var response = await client.PostAsync("/games", content: null, cancellationToken);
+        return await ReadGameIdAsync(response, cancellationToken);
+    }
+
+    private static async Task<Guid> ReadGameIdAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var body = await response.Content.ReadFromJsonAsync<GameResponse>(JsonOptions, cancellationToken);
         Assert.NotNull(body);
         return body.GameId;
     }
+
+    private static async Task<Difficulty> GetDifficultyAsync(HttpClient client, Guid gameId, CancellationToken cancellationToken)
+    {
+        var game = await client.GetFromJsonAsync<GameStateResponse>($"/games/{gameId}", JsonOptions, cancellationToken);
+        Assert.NotNull(game);
+        return game.Difficulty;
+    }
+
+    // Raw JSON, for bodies a C# record can't produce
+    private static StringContent JsonBody(string json) => new(json, Encoding.UTF8, "application/json");
 
     private static async Task<string?> ReadErrorCodeAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

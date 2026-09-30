@@ -6,13 +6,18 @@ public sealed class Game
     public Board OpponentBoard { get; } = new();
     public Side CurrentTurn { get; private set; } = Side.Player;
     public Guid Id { get; } = Guid.NewGuid();
+    public Difficulty Difficulty { get; }
+    public const Difficulty DefaultDifficulty = Difficulty.Normal;
 
-    public Game()
+    public Game(Difficulty difficulty = DefaultDifficulty)
     {
+        Difficulty = difficulty;
     }
-    internal Game(Guid id)
+    
+    internal Game(Guid id, Difficulty difficulty = DefaultDifficulty)
     {
         Id = id;
+        Difficulty = difficulty;
     }
 
     public Side? Winner =>
