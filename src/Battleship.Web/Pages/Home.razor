@@ -4,26 +4,15 @@
 
 <h1>Battleship</h1>
 
-<table class="board">
-    <thead>
-        <tr>
-            <th></th>
-            @foreach (var column in Enumerable.Range(0, Board.Size))
-            {
-                <th>@((char)('A' + column))</th>
-            }
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (int row in Enumerable.Range(0, Board.Size))
-        {
-            <tr>
-                <th>@(row + 1)</th>
-                @foreach (int column in Enumerable.Range(0, Board.Size))
-                {
-                    <td>@(new Coordinate(column, row))</td>
-                }
-            </tr>
-        }
-    </tbody>
-</table>
+<BoardGrid Board="testBoard" AreShipsVisible="true" />
+
+@code {
+    private readonly Board testBoard = CreateTestBoard();
+
+    private static Board CreateTestBoard()
+    {
+        var board = new Board();
+        board.TryPlaceShipsRandomly(Random.Shared);
+        return board;
+    }
+}

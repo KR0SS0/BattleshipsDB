@@ -1,0 +1,45 @@
+<table class="board">
+    <thead>
+        <tr>
+            <th></th>
+            @foreach (var column in Enumerable.Range(0, Board.Size))
+            {
+                <th>@((char)('A' + column))</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (int row in Enumerable.Range(0, Board.Size))
+        {
+            <tr>
+                <th>@(row + 1)</th>
+                @foreach (int column in Enumerable.Range(0, Board.Size))
+                {
+                    var cell = new Coordinate(column, row);
+                    <td class="@CellClass(cell)" @onclick="() => OnCellClick.InvokeAsync(cell)"></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired] public Board Board { get; set; } = default!;
+    [Parameter] public bool AreShipsVisible { get; set; }
+    [Parameter] public EventCallback<Coordinate> OnCellClick { get; set; }
+
+    private string CellClass(Coordinate coordinate)
+    {
+        var isCellShot = Board.ShotCells.Contains(coordinate);
+        var ship = Board.ShipAtCoordinate(coordinate);
+
+        if (ship is not null && Board.IsShipSunk(ship))
+            return "sunk";
+        if (isCellShot)
+            return ship is null ? "miss" : "hit";
+        if (ship is not null && AreShipsVisible)
+            return "ship";
+
+        return "water";
+    }
+}

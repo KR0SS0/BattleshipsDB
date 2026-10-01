@@ -11,5 +11,25 @@
 
 .board td {
     border: 1px solid #5b7c99;
+    cursor: pointer;
+}
+
+.water {
     background-color: #dbeafe;
+}
+
+.ship {
+    background-color: #64748b;
+}
+
+.miss {
+    background-color: #e2e8f0;
+}
+
+.hit {
+    background-color: #f97316;
+}
+
+.sunk {
+    background-color: #b91c1c;
 }
