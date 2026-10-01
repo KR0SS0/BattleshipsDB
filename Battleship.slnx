@@ -3,6 +3,7 @@
     <Project Path="src/Battleship.Api/Battleship.Api.csproj" />
     <Project Path="src/Battleship.Domain/Battleship.Domain.csproj" />
     <Project Path="src/Battleship.Infrastructure/Battleship.Infrastructure.csproj" />
+    <Project Path="src/Battleship.Web/Battleship.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Battleship.Api.IntegrationTests/Battleship.Api.IntegrationTests.csproj" />
