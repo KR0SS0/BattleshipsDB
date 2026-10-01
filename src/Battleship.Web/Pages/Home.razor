@@ -1,7 +1,29 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Battleship</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Battleship</h1>
 
-Welcome to your new app.
+<table class="board">
+    <thead>
+        <tr>
+            <th></th>
+            @foreach (var column in Enumerable.Range(0, Board.Size))
+            {
+                <th>@((char)('A' + column))</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (int row in Enumerable.Range(0, Board.Size))
+        {
+            <tr>
+                <th>@(row + 1)</th>
+                @foreach (int column in Enumerable.Range(0, Board.Size))
+                {
+                    <td>@(new Coordinate(column, row))</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

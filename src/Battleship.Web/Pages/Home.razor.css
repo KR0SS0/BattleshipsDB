@@ -1,0 +1,15 @@
+.board {
+    border-collapse: collapse;
+}
+
+.board th,
+.board td {
+    width: 2rem;
+    height: 2rem;
+    text-align: center;
+}
+
+.board td {
+    border: 1px solid #5b7c99;
+    background-color: #dbeafe;
+}
