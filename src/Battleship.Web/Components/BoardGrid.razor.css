@@ -1,12 +1,23 @@
 .board {
+    /* Grows with the screen, but stays between 1.75rem and 4.5rem */
+    --cell-size: clamp(1.75rem, 8vw, 4.5rem);
     border-collapse: collapse;
+    table-layout: fixed;
+    margin: 1.5rem auto;
 }
 
 .board th,
 .board td {
-    width: 2rem;
-    height: 2rem;
+    width: var(--cell-size);
+    min-width: var(--cell-size);
+    height: var(--cell-size);
+    padding: 0;
     text-align: center;
+}
+
+.board th {
+    font-weight: 600;
+    color: #334155;
 }
 
 .board td {
