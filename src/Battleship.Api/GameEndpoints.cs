@@ -61,27 +61,14 @@ public static class GameEndpoints
         if (game is null)
             return TypedResults.Problem(title: "Game not found", statusCode: StatusCodes.Status404NotFound);
 
-        if (game.CurrentTurn != Side.Player)
-            return TypedResults.Problem(title: "It is not the Player's turn", statusCode: StatusCodes.Status409Conflict);
+        var roundResult = game.PlayRound(playerCell, Random.Shared);
+        if (!roundResult.IsSuccess)
+            return roundResult.Error.ToProblem();
 
-        var playerResult = game.Shoot(playerCell);
-        if (!playerResult.IsSuccess)
-            return playerResult.Error.ToProblem();
-
-        repository.AddShot(game, playerResult.Value, Side.Opponent);
-
-        // Opponent shooting player
-        ShotResponse? firedByOpponent = null;
-        if (!game.IsOver)
-        {
-            var shotAtCell = game.Difficulty.ShotStrategy().ChooseTarget(game.PlayerBoard.ShotHistory, Random.Shared);
-            if (shotAtCell is not null)
-            {
-                var opponentResult = game.Shoot(shotAtCell.Value);
-                repository.AddShot(game, opponentResult.Value, Side.Player);
-                firedByOpponent = ShotResponse.From(opponentResult.Value);
-            }
-        }
+        var round = roundResult.Value;
+        repository.AddShot(game, round.PlayerShot, Side.Opponent);
+        if (round.OpponentShot is not null)
+            repository.AddShot(game, round.OpponentShot, Side.Player);
 
         // Save shots
         var saveResult = await repository.SaveChangesAsync(cancellationToken);
@@ -89,8 +76,8 @@ public static class GameEndpoints
             return saveResult.Error.ToProblem();
 
         return TypedResults.Ok(new FireShotResponse(
-            ShotResponse.From(playerResult.Value),
-            firedByOpponent,
+            ShotResponse.From(round.PlayerShot),
+            round.OpponentShot is null ? null : ShotResponse.From(round.OpponentShot),
             GameStateResponse.From(game)));
     }
 }

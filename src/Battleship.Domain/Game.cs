@@ -13,8 +13,8 @@ public sealed class Game
     {
         Difficulty = difficulty;
     }
-    
-    internal Game(Guid id, Difficulty difficulty = DefaultDifficulty)
+
+    internal Game(Guid id, Difficulty difficulty)
     {
         Id = id;
         Difficulty = difficulty;
@@ -37,10 +37,33 @@ public sealed class Game
         var targetBoard = CurrentTurn == Side.Player ? OpponentBoard : PlayerBoard;
         var result = targetBoard.ReceiveShot(coordinate);
 
-        // Switch whose turn it is  
+        // Switch whose turn it is
         if (result.IsSuccess)
             CurrentTurn = CurrentTurn == Side.Player ? Side.Opponent : Side.Player;
 
         return result;
+    }
+
+    public Result<Round> PlayRound(Coordinate playerCellTarget, Random random)
+    {
+        if (IsOver)
+            return Result<Round>.Failure(GameErrors.GameOver);
+        if (CurrentTurn != Side.Player)
+            return Result<Round>.Failure(GameErrors.NotYourTurn);
+
+        var playerShot = Shoot(playerCellTarget);
+        if (!playerShot.IsSuccess)
+            return Result<Round>.Failure(playerShot.Error);
+
+        // Opponent fires back, unless the player just won
+        Shot? opponentShot = null;
+        if (!IsOver)
+        {
+            var opponentTarget = Difficulty.ShotStrategy().ChooseTarget(PlayerBoard.ShotHistory, random);
+            if (opponentTarget is not null)
+                opponentShot = Shoot(opponentTarget.Value).Value;
+        }
+
+        return Result<Round>.Success(new Round(playerShot.Value, opponentShot));
     }
 }
