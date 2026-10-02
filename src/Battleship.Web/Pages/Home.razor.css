@@ -4,3 +4,15 @@
     align-items: center;
     padding: 1rem;
 }
+
+.controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.controls button,
+.controls select {
+    font: inherit;
+    padding: 0.4rem 0.9rem;
+}

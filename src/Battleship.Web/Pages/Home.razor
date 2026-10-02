@@ -3,6 +3,23 @@
 <PageTitle>Battleship</PageTitle>
 
 <div class="game">
+    <div class="controls">
+        @if (isPlaying)
+        {
+            <button @onclick="StopGame">Stop game</button>
+        }
+        else
+        {
+            <select @bind="gameDifficulty">
+                @foreach (var difficulty in Enum.GetValues<Difficulty>())
+                {
+                    <option value="@difficulty">@difficulty</option>
+                }
+            </select>
+            <button @onclick="StartNewGame">New game</button>
+        }
+    </div>
+
     <h2>Enemy waters</h2>
     <BoardGrid Board="game.OpponentBoard" OnCellClick="PlayRoundAndFireAt" />
 
@@ -13,12 +30,27 @@
 </div>
 
 @code {
-    private string message = "Fire!";
-    private Game game = CreateGame();
+    private string message = "Choose a difficulty and start a new game.";
+    private Game game = CreateGame(Game.DefaultDifficulty);
+    private Difficulty gameDifficulty = Game.DefaultDifficulty;
+    private bool isPlaying;
 
-    private static Game CreateGame()
+    private void StartNewGame()
     {
-        var game = new Game();
+        game = CreateGame(gameDifficulty);
+        isPlaying = true;
+        message = "Fire!";
+    }
+
+    private void StopGame()
+    {
+        isPlaying = false;
+        message = "Game stopped.";
+    }
+
+    private static Game CreateGame(Difficulty difficulty)
+    {
+        var game = new Game(difficulty);
 
         game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared); // TODO: Allow player to place ships manually
         game.OpponentBoard.TryPlaceShipsRandomly(Random.Shared);
@@ -28,6 +60,9 @@
 
     private void PlayRoundAndFireAt(Coordinate coordinate)
     {
+        if (!isPlaying)
+            return;
+
         var result = game.PlayRound(coordinate, Random.Shared);
         if (!result.IsSuccess)
         {
@@ -46,6 +81,9 @@
             message += " Enemy eliminated! Good job captain!";
         else if (game.Winner == Side.Opponent)
             message += " We will get them next time...";
+
+        if (game.IsOver)
+            isPlaying = false;
     }
 
     private static string OutcomeMessage(Shot shot) => shot.Outcome switch
