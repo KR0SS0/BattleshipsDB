@@ -65,6 +65,7 @@ public sealed class GamesEndpointTests(ApiFixture api) : IClassFixture<ApiFixtur
     [Theory]
     [InlineData(Difficulty.Easy)]
     [InlineData(Difficulty.Normal)]
+    [InlineData(Difficulty.Hard)]
     public async ValueTask CreateGame_WithDifficulty_GameUsesThatDifficulty(Difficulty difficulty)
     {
         // Arrange

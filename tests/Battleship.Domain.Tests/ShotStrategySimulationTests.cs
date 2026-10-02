@@ -21,6 +21,23 @@ public class ShotStrategySimulationTests
         Assert.True(averageHuntTarget < averageRandom);
     }
 
+    [Fact]
+    public void Smart_NeedsFewerShotsThanHuntTarget()
+    {
+        // Arrange
+        var huntTargetStrategy = new HuntTargetShotStrategy();
+        var smartStrategy = new SmartShotStrategy();
+
+        // Act
+        double averageHuntTarget = AverageShotsToSinkFleet(huntTargetStrategy);
+        double averageSmart = AverageShotsToSinkFleet(smartStrategy);
+
+        // Assert
+        TestContext.Current.TestOutputHelper?.WriteLine($"Average hunt target strategy amount = {averageHuntTarget:F1}\n" +
+            $"Average smart strategy amount = {averageSmart:F1}");
+        Assert.True(averageSmart < averageHuntTarget);
+    }
+
     private static double AverageShotsToSinkFleet(IShotStrategy strategy) =>
         Enumerable.Range(0, GamesPerStrategy).Average(seed => CountShotsToSinkFleet(strategy, seed));
 

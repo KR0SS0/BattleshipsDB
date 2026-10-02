@@ -7,6 +7,7 @@ public static class DifficultyExtension {
         {
             Difficulty.Easy => new RandomShotStrategy(),
             Difficulty.Normal => new HuntTargetShotStrategy(),
+            Difficulty.Hard => new SmartShotStrategy(),
             _ => throw new ArgumentOutOfRangeException(nameof(difficulty), difficulty, null)
         };
     }
