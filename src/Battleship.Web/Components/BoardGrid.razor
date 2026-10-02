@@ -1,4 +1,4 @@
-<table class="board" @onmouseleave="() => OnBoardLeave.InvokeAsync()">
+<table class="board @(IsActive ? "active" : "")" @onmouseleave="() => OnBoardLeave.InvokeAsync()">
     <thead>
         <tr>
             <th></th>
@@ -16,7 +16,7 @@
                 @foreach (int column in Enumerable.Range(0, Board.Size))
                 {
                     var cell = new Coordinate(column, row);
-                    <td class="@CellClass(cell)"
+                    <td class="@CellClass(cell) @(cell == lastShotCell ? "last-shot" : "")"
                         @onclick="() => OnCellClick.InvokeAsync(cell)"
                         @oncontextmenu="() => OnCellRightClick.InvokeAsync(cell)"
                         @oncontextmenu:preventDefault="OnCellRightClick.HasDelegate"
@@ -30,6 +30,7 @@
 @code {
     [Parameter, EditorRequired] public Board Board { get; set; } = default!;
     [Parameter] public bool AreShipsVisible { get; set; }
+    [Parameter] public bool IsActive { get; set; }
     [Parameter] public Ship? PreviewShip { get; set; }
     [Parameter] public EventCallback<Coordinate> OnCellClick { get; set; }
     [Parameter] public EventCallback<Coordinate> OnCellRightClick { get; set; }
@@ -38,12 +39,14 @@
 
     private HashSet<Coordinate> previewCells = [];
     private bool isPreviewValid;
+    private Coordinate? lastShotCell;
 
-    // Runs before each render: work out the preview once, instead of once per cell
+    // Runs before each render: work these out once, instead of once per cell
     protected override void OnParametersSet()
     {
         previewCells = PreviewShip?.GetCells().ToHashSet() ?? [];
         isPreviewValid = PreviewShip is not null && Board.CheckPlacement(PreviewShip).IsSuccess;
+        lastShotCell = Board.ShotHistory.Count > 0 ? Board.ShotHistory[^1].Coordinate : null;
     }
 
     private string CellClass(Coordinate coordinate)

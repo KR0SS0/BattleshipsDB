@@ -44,26 +44,36 @@ public sealed class Game
         return result;
     }
 
+    //A round where player shoots then opponent shoots back.
     public Result<Round> PlayRound(Coordinate playerCellTarget, Random random)
     {
-        if (IsOver)
-            return Result<Round>.Failure(GameErrors.GameOver);
-        if (CurrentTurn != Side.Player)
-            return Result<Round>.Failure(GameErrors.NotYourTurn);
-
-        var playerShot = Shoot(playerCellTarget);
+        var playerShot = PlayerTurn(playerCellTarget);
         if (!playerShot.IsSuccess)
             return Result<Round>.Failure(playerShot.Error);
 
-        // Opponent fires back, unless the player just won
-        Shot? opponentShot = null;
-        if (!IsOver)
-        {
-            var opponentTarget = Difficulty.ShotStrategy().ChooseTarget(PlayerBoard.ShotHistory, random);
-            if (opponentTarget is not null)
-                opponentShot = Shoot(opponentTarget.Value).Value;
-        }
+        return Result<Round>.Success(new Round(playerShot.Value, OpponentTurn(random)));
+    }
 
-        return Result<Round>.Success(new Round(playerShot.Value, opponentShot));
+    // The first half of a round. Afterwards it's the opponent's turn, unless the player just won.
+    public Result<Shot> PlayerTurn(Coordinate target)
+    {
+        if (IsOver)
+            return Result<Shot>.Failure(GameErrors.GameOver);
+        if (CurrentTurn != Side.Player)
+            return Result<Shot>.Failure(GameErrors.NotYourTurn);
+
+        return Shoot(target);
+    }
+
+    // The second half of a round. Null when the game is already over.
+    public Shot? OpponentTurn(Random random)
+    {
+        if (IsOver)
+            return null;
+        if (CurrentTurn != Side.Opponent)
+            throw new InvalidOperationException("It is not the opponent's turn.");
+
+        var target = Difficulty.ShotStrategy().ChooseTarget(PlayerBoard.ShotHistory, random);
+        return target is null ? null : Shoot(target.Value).Value;
     }
 }

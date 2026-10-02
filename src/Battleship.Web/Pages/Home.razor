@@ -29,12 +29,15 @@
     <section class="boards">
         <div class="board-panel">
             <h2>Enemy waters</h2>
-            <BoardGrid Board="game.OpponentBoard" OnCellClick="PlayRoundAndFireAt" />
+            <BoardGrid Board="game.OpponentBoard"
+                       IsActive="phase == GamePhase.Playing"
+                       OnCellClick="PlayRoundAndFireAt" />
         </div>
 
         <div class="board-panel">
             <h2>Your fleet</h2>
             <BoardGrid Board="game.PlayerBoard"
+                       IsActive="phase == GamePhase.PlacingShips"
                        AreShipsVisible="true"
                        PreviewShip="previewShip"
                        OnCellClick="PlaceNextShip"
@@ -62,6 +65,11 @@
     private Game game = new(); // Empty boards until the first game starts
     private Difficulty gameDifficulty = Game.DefaultDifficulty;
     private GamePhase phase = GamePhase.NotStarted;
+
+    // The enemy fires after a short random pause, so you can see its shot happen
+    private const int EnemyDelayMinMs = 100;
+    private const int EnemyDelayMaxMs = 250;
+    private bool isEnemyAiming;
 
     // Ship placement
     private Orientation orientation = Orientation.Horizontal;
@@ -157,32 +165,45 @@
         ? $"Place your {type}."
         : "All ships placed.";
 
-    private void PlayRoundAndFireAt(Coordinate coordinate)
+    private async Task PlayRoundAndFireAt(Coordinate coordinate)
     {
-        if (phase != GamePhase.Playing)
+        if (phase != GamePhase.Playing || isEnemyAiming)
             return;
 
-        var result = game.PlayRound(coordinate, Random.Shared);
-        if (!result.IsSuccess)
+        var playerShot = game.PlayerTurn(coordinate);
+        if (!playerShot.IsSuccess)
         {
-            message = result.Error.Message;
+            message = playerShot.Error.Message;
             return;
         }
 
-        // Round results
-        var round = result.Value;
-        message = $"Fired at {round.PlayerShot.Coordinate}: {OutcomeMessage(round.PlayerShot)}.";
-        if (round.OpponentShot is not null)
-            message += $" Enemy fired back at {round.OpponentShot.Coordinate}: {OutcomeMessage(round.OpponentShot)}.";
-
-        // Who won?
+        message = $"Fired at {playerShot.Value.Coordinate}: {OutcomeMessage(playerShot.Value)}.";
         if (game.Winner == Side.Player)
+        {
             message += " Enemy eliminated! Good job captain!";
-        else if (game.Winner == Side.Opponent)
-            message += " We will get them next time...";
-
-        if (game.IsOver)
             phase = GamePhase.Finished;
+            return;
+        }
+
+        // Blazor redraws at the first await, so the player's shot shows before the enemy fires
+        isEnemyAiming = true;
+        var gameBeforeDelay = game;
+        await Task.Delay(Random.Shared.Next(EnemyDelayMinMs, EnemyDelayMaxMs + 1));
+        isEnemyAiming = false;
+
+        // The game may have been stopped or replaced during the delay
+        if (game != gameBeforeDelay || phase != GamePhase.Playing)
+            return;
+
+        var opponentShot = game.OpponentTurn(Random.Shared);
+        if (opponentShot is not null)
+            message += $" Enemy fired back at {opponentShot.Coordinate}: {OutcomeMessage(opponentShot)}.";
+
+        if (game.Winner == Side.Opponent)
+        {
+            message += " We will get them next time...";
+            phase = GamePhase.Finished;
+        }
     }
 
     private static string OutcomeMessage(Shot shot) => shot.Outcome switch

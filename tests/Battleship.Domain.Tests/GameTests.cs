@@ -239,6 +239,69 @@ public class GameTests
         Assert.Equal(GameErrors.NotYourTurn, result.Error);
     }
 
+    [Fact]
+    public void PlayerTurn_ValidCell_PassesTurnToOpponent()
+    {
+        // Arrange
+        var game = new Game();
+        PlaceFullFleet(game.PlayerBoard);
+        PlaceFullFleet(game.OpponentBoard);
+
+        // Act
+        var result = game.PlayerTurn(new Coordinate(0, 0));
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Side.Opponent, game.CurrentTurn);
+        Assert.Empty(game.PlayerBoard.ShotHistory);   // the opponent hasn't fired yet
+    }
+
+    [Fact]
+    public void OpponentTurn_AfterPlayerTurn_FiresAtPlayerBoardAndPassesTurnBack()
+    {
+        // Arrange
+        var game = new Game();
+        PlaceFullFleet(game.PlayerBoard);
+        PlaceFullFleet(game.OpponentBoard);
+        game.PlayerTurn(new Coordinate(0, 0));
+
+        // Act
+        var shot = game.OpponentTurn(new Random(1));
+
+        // Assert
+        Assert.NotNull(shot);
+        Assert.Equal(shot, Assert.Single(game.PlayerBoard.ShotHistory));
+        Assert.Equal(Side.Player, game.CurrentTurn);
+    }
+
+    [Fact]
+    public void OpponentTurn_GameIsOver_ReturnsNull()
+    {
+        // Arrange
+        var game = new Game();
+        PlaceFullFleet(game.PlayerBoard);
+        PlaceFullFleet(game.OpponentBoard);
+        SinkOpponentFleet(game);
+
+        // Act
+        var shot = game.OpponentTurn(new Random(1));
+
+        // Assert
+        Assert.Null(shot);
+    }
+
+    [Fact]
+    public void OpponentTurn_PlayersTurn_Throws()
+    {
+        // Arrange
+        var game = new Game();
+        PlaceFullFleet(game.PlayerBoard);
+        PlaceFullFleet(game.OpponentBoard);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => game.OpponentTurn(new Random(1)));
+    }
+
     private static Round SinkOpponentFleet(Game game)
     {
         var random = new Random(1);
