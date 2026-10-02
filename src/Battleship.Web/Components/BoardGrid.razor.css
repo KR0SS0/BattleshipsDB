@@ -44,3 +44,11 @@
 .sunk {
     background-color: #b91c1c;
 }
+
+.preview {
+    background-color: #86efac;
+}
+
+.preview-invalid {
+    background-color: #fca5a5;
+}

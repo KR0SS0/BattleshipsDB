@@ -7,19 +7,29 @@
         <h1>Battleship</h1>
 
         <div class="controls">
-            @if (isPlaying)
+            @switch (phase)
             {
-                <button @onclick="StopGame">Stop game</button>
-            }
-            else
-            {
-                <select @bind="gameDifficulty">
-                    @foreach (var difficulty in Enum.GetValues<Difficulty>())
-                    {
-                        <option value="@difficulty">@difficulty</option>
-                    }
-                </select>
-                <button @onclick="StartNewGame">New game</button>
+                case GamePhase.PlacingShips:
+                    <button @onclick="Rotate">Rotate (@orientation)</button>
+                    <button @onclick="PlaceRestRandomly">Place the rest randomly</button>
+                    <button @onclick="ResetPlacement">Reset</button>
+                    <button @onclick="StartBattle" disabled="@(!game.PlayerBoard.AreAllShipsPlaced)">Start battle</button>
+                    <button @onclick="StopGame">Stop game</button>
+                    break;
+
+                case GamePhase.Playing:
+                    <button @onclick="StopGame">Stop game</button>
+                    break;
+
+                default:
+                    <select @bind="gameDifficulty">
+                        @foreach (var difficulty in Enum.GetValues<Difficulty>())
+                        {
+                            <option value="@difficulty">@difficulty</option>
+                        }
+                    </select>
+                    <button @onclick="StartNewGame">New game</button>
+                    break;
             }
         </div>
 
@@ -34,7 +44,13 @@
 
         <div class="board-panel">
             <h2>Your fleet</h2>
-            <BoardGrid Board="game.PlayerBoard" AreShipsVisible="true" />
+            <BoardGrid Board="game.PlayerBoard"
+                       AreShipsVisible="true"
+                       PreviewShip="previewShip"
+                       OnCellClick="PlaceNextShip"
+                       OnCellRightClick="RotateAt"
+                       OnCellHover="ShowPreview"
+                       OnBoardLeave="ClearPreview" />
         </div>
     </section>
 </div>
@@ -43,34 +59,117 @@
     private string message = "Choose a difficulty and start a new game.";
     private Game game = new(); // Empty boards until the first game starts
     private Difficulty gameDifficulty = Game.DefaultDifficulty;
-    private bool isPlaying;
+    private GamePhase phase = GamePhase.NotStarted;
+
+    // Ship placement
+    private Orientation orientation = Orientation.Horizontal;
+    private Coordinate? hoveredCell;
+    private Ship? previewShip;
+
+    private ShipType? NextShipType
+    {
+        get
+        {
+            var unplaced = game.PlayerBoard.UnplacedShipTypes();
+            return unplaced.Count > 0 ? unplaced[0] : null;
+        }
+    }
 
     private void StartNewGame()
     {
         game = CreateGame(gameDifficulty);
-        isPlaying = true;
-        message = "Fire!";
+        phase = GamePhase.PlacingShips;
+        orientation = Orientation.Horizontal;
+        message = PlacementMessage();
     }
 
     private void StopGame()
     {
-        isPlaying = false;
+        phase = GamePhase.Finished;
+        previewShip = null;
         message = "Game stopped.";
     }
 
     private static Game CreateGame(Difficulty difficulty)
     {
         var game = new Game(difficulty);
-
-        game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared); // TODO: Allow player to place ships manually
         game.OpponentBoard.TryPlaceShipsRandomly(Random.Shared);
-
         return game;
     }
 
+    private void PlaceNextShip(Coordinate cell)
+    {
+        if (phase != GamePhase.PlacingShips || NextShipType is not ShipType type)
+            return;
+
+        var result = game.PlayerBoard.PlaceShip(new Ship(type, cell, orientation));
+        message = result.IsSuccess ? PlacementMessage() : result.Error.Message;
+        UpdatePreview();
+    }
+
+    private void Rotate()
+    {
+        orientation = orientation == Orientation.Horizontal ? Orientation.Vertical : Orientation.Horizontal;
+        UpdatePreview();
+    }
+
+    private void RotateAt(Coordinate cell)
+    {
+        hoveredCell = cell;
+        Rotate();
+    }
+
+    private void PlaceRestRandomly()
+    {
+        game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared);
+        message = PlacementMessage();
+        UpdatePreview();
+    }
+
+    // A Board can't remove ships, so starting over means a fresh game with the same difficulty
+    private void ResetPlacement()
+    {
+        game = CreateGame(game.Difficulty);
+        message = PlacementMessage();
+        UpdatePreview();
+    }
+
+    private void StartBattle()
+    {
+        if (!game.PlayerBoard.AreAllShipsPlaced)
+            return;
+
+        phase = GamePhase.Playing;
+        previewShip = null;
+        message = "Fire at the enemy!";
+    }
+
+    private void ShowPreview(Coordinate cell)
+    {
+        hoveredCell = cell;
+        UpdatePreview();
+    }
+
+    private void ClearPreview()
+    {
+        hoveredCell = null;
+        previewShip = null;
+    }
+
+    private void UpdatePreview()
+    {
+        previewShip = phase == GamePhase.PlacingShips && hoveredCell is Coordinate cell && NextShipType is ShipType type
+            ? new Ship(type, cell, orientation)
+            : null;
+    }
+
+    private string PlacementMessage() => NextShipType is ShipType type
+        ? $"Place your {type} ({type.Length()} cells). Left click to place, right click to rotate."
+        : "All ships placed. Start the battle!";
+
     private void PlayRoundAndFireAt(Coordinate coordinate)
     {
-        if (!isPlaying)
+        if (phase != GamePhase.Playing)
             return;
 
         var result = game.PlayRound(coordinate, Random.Shared);
@@ -93,7 +192,7 @@
             message += " We will get them next time...";
 
         if (game.IsOver)
-            isPlaying = false;
+            phase = GamePhase.Finished;
     }
 
     private static string OutcomeMessage(Shot shot) => shot.Outcome switch

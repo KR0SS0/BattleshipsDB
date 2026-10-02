@@ -487,4 +487,83 @@ public class BoardTests
         // Assert
         Assert.Single(board.ShotHistory);
     }
+
+    [Fact]
+    public void UnplacedShipTypes_NewBoard_ReturnsAllTypesInOrder()
+    {
+        // Arrange
+        var board = new Board();
+
+        // Act
+        var unplaced = board.UnplacedShipTypes();
+
+        // Assert
+        Assert.Equal(
+            [ShipType.Carrier, ShipType.Battleship, ShipType.Cruiser, ShipType.Submarine, ShipType.Destroyer],
+            unplaced);
+    }
+
+    [Fact]
+    public void UnplacedShipTypes_AfterPlacingCruiser_ExcludesCruiser()
+    {
+        // Arrange
+        var board = new Board();
+        board.PlaceShip(new Ship(ShipType.Cruiser, new Coordinate(0, 0), Orientation.Horizontal));
+
+        // Act
+        var unplaced = board.UnplacedShipTypes();
+
+        // Assert
+        Assert.Equal(4, unplaced.Count);
+        Assert.DoesNotContain(ShipType.Cruiser, unplaced);
+    }
+
+    [Fact]
+    public void CheckPlacement_ValidShip_SucceedsWithoutPlacingIt()
+    {
+        // Arrange
+        var board = new Board();
+        var ship = new Ship(ShipType.Destroyer, new Coordinate(2, 2), Orientation.Vertical);
+
+        // Act
+        var result = board.CheckPlacement(ship);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Empty(board.Ships);
+    }
+
+    [Fact]
+    public void CheckPlacement_OverlappingShip_FailsWithOverlap()
+    {
+        // Arrange
+        var board = new Board();
+        board.PlaceShip(new Ship(ShipType.Carrier, new Coordinate(0, 0), Orientation.Horizontal));
+        var crossing = new Ship(ShipType.Destroyer, new Coordinate(2, 0), Orientation.Vertical);
+
+        // Act
+        var result = board.CheckPlacement(crossing);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(PlacementErrors.Overlap, result.Error);
+    }
+
+    [Fact]
+    public void TryPlaceShipsRandomly_SomeShipsAlreadyPlaced_PlacesOnlyTheRest()
+    {
+        // Arrange
+        var board = new Board();
+        var carrier = new Ship(ShipType.Carrier, new Coordinate(0, 0), Orientation.Horizontal);
+        board.PlaceShip(carrier);
+
+        // Act
+        var result = board.TryPlaceShipsRandomly(new Random(1));
+
+        // Assert
+        Assert.True(result);
+        Assert.True(board.AreAllShipsPlaced);
+        Assert.Equal(5, board.Ships.Count);
+        Assert.Contains(carrier, board.Ships);
+    }
 }

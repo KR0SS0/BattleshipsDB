@@ -1,4 +1,4 @@
-<table class="board">
+<table class="board" @onmouseleave="() => OnBoardLeave.InvokeAsync()">
     <thead>
         <tr>
             <th></th>
@@ -16,7 +16,11 @@
                 @foreach (int column in Enumerable.Range(0, Board.Size))
                 {
                     var cell = new Coordinate(column, row);
-                    <td class="@CellClass(cell)" @onclick="() => OnCellClick.InvokeAsync(cell)"></td>
+                    <td class="@CellClass(cell)"
+                        @onclick="() => OnCellClick.InvokeAsync(cell)"
+                        @oncontextmenu="() => OnCellRightClick.InvokeAsync(cell)"
+                        @oncontextmenu:preventDefault="OnCellRightClick.HasDelegate"
+                        @onmouseover="() => OnCellHover.InvokeAsync(cell)"></td>
                 }
             </tr>
         }
@@ -26,7 +30,21 @@
 @code {
     [Parameter, EditorRequired] public Board Board { get; set; } = default!;
     [Parameter] public bool AreShipsVisible { get; set; }
+    [Parameter] public Ship? PreviewShip { get; set; }
     [Parameter] public EventCallback<Coordinate> OnCellClick { get; set; }
+    [Parameter] public EventCallback<Coordinate> OnCellRightClick { get; set; }
+    [Parameter] public EventCallback<Coordinate> OnCellHover { get; set; }
+    [Parameter] public EventCallback OnBoardLeave { get; set; }
+
+    private HashSet<Coordinate> previewCells = [];
+    private bool isPreviewValid;
+
+    // Runs before each render: work out the preview once, instead of once per cell
+    protected override void OnParametersSet()
+    {
+        previewCells = PreviewShip?.GetCells().ToHashSet() ?? [];
+        isPreviewValid = PreviewShip is not null && Board.CheckPlacement(PreviewShip).IsSuccess;
+    }
 
     private string CellClass(Coordinate coordinate)
     {
@@ -37,6 +55,8 @@
             return "sunk";
         if (isCellShot)
             return ship is null ? "miss" : "hit";
+        if (previewCells.Contains(coordinate))
+            return isPreviewValid ? "preview" : "preview-invalid";
         if (ship is not null && AreShipsVisible)
             return "ship";
 

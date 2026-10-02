@@ -32,8 +32,13 @@
 
 .controls {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
-    align-items: center;
+}
+
+.controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .controls button,
@@ -79,6 +84,12 @@
 
     .sidebar h1 {
         font-size: 1.5rem;
+    }
+
+    .controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .boards {

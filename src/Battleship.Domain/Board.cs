@@ -31,7 +31,20 @@ public sealed class Board
 
     public IReadOnlyList<Coordinate> UnshotCells() => AllCells.Where(cell => !_shotCells.Contains(cell)).ToList();
 
+    public IReadOnlyList<ShipType> UnplacedShipTypes() =>
+        Enum.GetValues<ShipType>().Where(type => _ships.All(placed => placed.Type != type)).ToList();
+
     public Result<Ship> PlaceShip(Ship ship)
+    {
+        var check = CheckPlacement(ship);
+        if (check.IsSuccess)
+            _ships.Add(ship);
+
+        return check;
+    }
+
+    // Same rules as PlaceShip, without placing anything. Used for the placement preview.
+    public Result<Ship> CheckPlacement(Ship ship)
     {
         var cells = ship.GetCells();
 
@@ -48,13 +61,13 @@ public sealed class Board
         if (cells.Any(occupied.Contains))
             return Result<Ship>.Failure(PlacementErrors.Overlap);
 
-        _ships.Add(ship);
         return Result<Ship>.Success(ship);
     }
 
+    // Places the ships that are still missing, so it also works after placing some by hand
     public bool TryPlaceShipsRandomly(Random random)
     {
-        foreach (var type in Enum.GetValues<ShipType>())
+        foreach (var type in UnplacedShipTypes())
         {
             // Every possible placement for this ship type
             var candidates = (
@@ -114,7 +127,7 @@ public sealed class Board
         else if (IsShipSunk(hitShip))
             shot = Shot.Sunk(shotCoordinate, hitShip);
         else
-            shot = Shot.Hit(shotCoordinate);      
+            shot = Shot.Hit(shotCoordinate);
 
         _shotHistory.Add(shot);
         return Result<Shot>.Success(shot);
@@ -131,12 +144,7 @@ public sealed class Board
         return ship.GetCells().All(_shotCells.Contains);
     }
 
-    internal void ReceiveShot(Coordinate? coordinate)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool AreAllShipsPlaced => Enum.GetValues<ShipType>().All(type => _ships.Any(s => s.Type == type));
+    public bool AreAllShipsPlaced => UnplacedShipTypes().Count == 0;
 
     public bool AreAllShipsSunk => _ships.Count > 0 && _ships.All(IsShipSunk);
 }
