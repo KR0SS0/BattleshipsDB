@@ -3,18 +3,56 @@
 <PageTitle>Battleship</PageTitle>
 
 <div class="game">
-    <h1>Battleship</h1>
+    <h2>Enemy waters</h2>
+    <BoardGrid Board="game.OpponentBoard" OnCellClick="PlayRoundAndFireAt" />
 
-    <BoardGrid Board="testBoard" AreShipsVisible="true" />
+    <h2>Your fleet</h2>
+    <BoardGrid Board="game.PlayerBoard" AreShipsVisible="true" />
+
+    <p>@message</p>
 </div>
 
 @code {
-    private readonly Board testBoard = CreateTestBoard();
+    private string message = "Fire!";
+    private Game game = CreateGame();
 
-    private static Board CreateTestBoard()
+    private static Game CreateGame()
     {
-        var board = new Board();
-        board.TryPlaceShipsRandomly(Random.Shared);
-        return board;
+        var game = new Game();
+
+        game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared); // TODO: Allow player to place ships manually
+        game.OpponentBoard.TryPlaceShipsRandomly(Random.Shared);
+
+        return game;
     }
+
+    private void PlayRoundAndFireAt(Coordinate coordinate)
+    {
+        var result = game.PlayRound(coordinate, Random.Shared);
+        if (!result.IsSuccess)
+        {
+            message = result.Error.Message;
+            return;
+        }
+
+        // Round results
+        var round = result.Value;
+        message = $"Fired at {round.PlayerShot.Coordinate}: {OutcomeMessage(round.PlayerShot)}.";
+        if (round.OpponentShot is not null)
+            message += $" Enemy fired back at {round.OpponentShot.Coordinate}: {OutcomeMessage(round.OpponentShot)}.";
+
+        // Who won?
+        if (game.Winner == Side.Player)
+            message += " Enemy eliminated! Good job captain!";
+        else if (game.Winner == Side.Opponent)
+            message += " We will get them next time...";
+    }
+
+    private static string OutcomeMessage(Shot shot) => shot.Outcome switch
+    {
+        ShotOutcome.Miss => "miss",
+        ShotOutcome.Hit => "hit",
+        ShotOutcome.Sunk => $"sunk the {shot.SunkShipType}",
+        _ => throw new ArgumentOutOfRangeException(nameof(shot), shot.Outcome, null)
+    };
 }
