@@ -3,35 +3,45 @@
 <PageTitle>Battleship</PageTitle>
 
 <div class="game">
-    <div class="controls">
-        @if (isPlaying)
-        {
-            <button @onclick="StopGame">Stop game</button>
-        }
-        else
-        {
-            <select @bind="gameDifficulty">
-                @foreach (var difficulty in Enum.GetValues<Difficulty>())
-                {
-                    <option value="@difficulty">@difficulty</option>
-                }
-            </select>
-            <button @onclick="StartNewGame">New game</button>
-        }
-    </div>
+    <aside class="sidebar">
+        <h1>Battleship</h1>
 
-    <h2>Enemy waters</h2>
-    <BoardGrid Board="game.OpponentBoard" OnCellClick="PlayRoundAndFireAt" />
+        <div class="controls">
+            @if (isPlaying)
+            {
+                <button @onclick="StopGame">Stop game</button>
+            }
+            else
+            {
+                <select @bind="gameDifficulty">
+                    @foreach (var difficulty in Enum.GetValues<Difficulty>())
+                    {
+                        <option value="@difficulty">@difficulty</option>
+                    }
+                </select>
+                <button @onclick="StartNewGame">New game</button>
+            }
+        </div>
 
-    <h2>Your fleet</h2>
-    <BoardGrid Board="game.PlayerBoard" AreShipsVisible="true" />
+        <p class="message">@message</p>
+    </aside>
 
-    <p>@message</p>
+    <section class="boards">
+        <div class="board-panel">
+            <h2>Enemy waters</h2>
+            <BoardGrid Board="game.OpponentBoard" OnCellClick="PlayRoundAndFireAt" />
+        </div>
+
+        <div class="board-panel">
+            <h2>Your fleet</h2>
+            <BoardGrid Board="game.PlayerBoard" AreShipsVisible="true" />
+        </div>
+    </section>
 </div>
 
 @code {
     private string message = "Choose a difficulty and start a new game.";
-    private Game game = CreateGame(Game.DefaultDifficulty);
+    private Game game = new(); // Empty boards until the first game starts
     private Difficulty gameDifficulty = Game.DefaultDifficulty;
     private bool isPlaying;
 

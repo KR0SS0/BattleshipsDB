@@ -1,8 +1,33 @@
+/* Three columns: sidebar | boards | empty. The empty column mirrors the sidebar,
+   which keeps the boards in the exact middle of the screen. */
 .game {
+    --sidebar-width: 14rem;
+    /* The largest cell size where two stacked boards still fit the height and the width */
+    --cell-size: min(
+        (100dvh - 8rem) / 22,
+        (100vw - 2 * var(--sidebar-width) - 6rem) / 11,
+        4.5rem);
+
+    height: 100dvh;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 2rem;
+    padding: 1rem;
+}
+
+.sidebar {
+    justify-self: end;
+    width: var(--sidebar-width);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 1rem;
+    gap: 1rem;
+}
+
+.sidebar h1 {
+    margin: 0;
 }
 
 .controls {
@@ -15,4 +40,48 @@
 .controls select {
     font: inherit;
     padding: 0.4rem 0.9rem;
+}
+
+.message {
+    margin: 0;
+    min-height: 3em;
+}
+
+.boards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.board-panel h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Portrait or narrow screens: controls on top, boards below, still no scrolling */
+@media (max-aspect-ratio: 1/1), (max-width: 50rem) {
+    .game {
+        --cell-size: min((100dvh - 15rem) / 22, (100vw - 2rem) / 11);
+        grid-template-columns: 1fr;
+        align-content: center;
+        justify-items: center;
+        row-gap: 0.75rem;
+    }
+
+    .sidebar {
+        justify-self: center;
+        width: auto;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .sidebar h1 {
+        font-size: 1.5rem;
+    }
+
+    .boards {
+        gap: 0.75rem;
+    }
 }

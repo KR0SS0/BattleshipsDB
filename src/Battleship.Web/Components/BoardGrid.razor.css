@@ -1,21 +1,21 @@
+/* --cell-size is set by the page that uses the grid; 3rem if it doesn't */
 .board {
-    /* Grows with the screen, but stays between 1.75rem and 4.5rem */
-    --cell-size: clamp(1.75rem, 8vw, 4.5rem);
     border-collapse: collapse;
     table-layout: fixed;
-    margin: 1.5rem auto;
+    margin: 0 auto;
 }
 
 .board th,
 .board td {
-    width: var(--cell-size);
-    min-width: var(--cell-size);
-    height: var(--cell-size);
+    width: var(--cell-size, 3rem);
+    min-width: var(--cell-size, 3rem);
+    height: var(--cell-size, 3rem);
     padding: 0;
     text-align: center;
 }
 
 .board th {
+    font-size: calc(var(--cell-size, 3rem) * 0.4);
     font-weight: 600;
     color: #334155;
 }
