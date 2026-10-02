@@ -1,0 +1,60 @@
+# Publishes the Blazor game (src/Battleship.Web) to GitHub Pages on every push to main.
+# Live at https://kr0ss0.github.io/BattleshipsDB/
+name: Deploy web game
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: 
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SITE_DIR: publish/wwwroot
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Install .NET (version from global.json)
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Publish the web app
+        run: dotnet publish src/Battleship.Web/Battleship.Web.csproj -c Release -o publish
+
+      - name: Set the base path
+        run: sed -i "s|<base href=\"/\" />|<base href=\"/${{ github.event.repository.name }}/\" />|" "$SITE_DIR/index.html"
+
+      - name: Disable Jekyll
+        run: touch "$SITE_DIR/.nojekyll"
+
+      - name: Add 404 fallback
+        run: cp "$SITE_DIR/index.html" "$SITE_DIR/404.html"
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ env.SITE_DIR }}
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
