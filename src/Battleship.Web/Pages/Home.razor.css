@@ -2,9 +2,10 @@
    which keeps the boards in the exact middle of the screen. */
 .game {
     --sidebar-width: 14rem;
-    /* The largest cell size where two stacked boards still fit the height and the width */
+    --footer-height: 2.5rem;
+    /* The largest cell size where two stacked boards and the footer still fit the height and the width */
     --cell-size: min(
-        (100dvh - 8rem) / 22,
+        (100dvh - 8rem - var(--footer-height)) / 22,
         (100vw - 2 * var(--sidebar-width) - 6rem) / 11,
         4.5rem);
 
@@ -13,6 +14,7 @@
     overflow: hidden;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: 1fr var(--footer-height);
     align-items: center;
     column-gap: 2rem;
     padding: 1rem;
@@ -34,11 +36,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.controls button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 .controls button,
@@ -64,11 +61,28 @@
     text-align: center;
 }
 
+/* Spans all three columns, under the boards */
+.hints {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    color: #334155;
+}
+
+.hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* Portrait or narrow screens: controls on top, boards below, still no scrolling */
 @media (max-aspect-ratio: 1/1), (max-width: 50rem) {
     .game {
-        --cell-size: min((100dvh - 15rem) / 22, (100vw - 2rem) / 11);
+        --cell-size: min((100dvh - 15rem - var(--footer-height)) / 22, (100vw - 2rem) / 11);
         grid-template-columns: 1fr;
+        grid-template-rows: auto auto var(--footer-height);
         align-content: center;
         justify-items: center;
         row-gap: 0.75rem;

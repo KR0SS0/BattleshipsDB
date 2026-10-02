@@ -1,0 +1,16 @@
+@* A computer mouse with the left or right button highlighted *@
+<svg class="mouse-icon" viewBox="0 0 24 34" aria-hidden="true">
+    <path class="button" d="@ButtonPath" />
+    <rect x="2" y="2" width="20" height="30" rx="10" />
+    <line x1="12" y1="2" x2="12" y2="14" />
+    <line x1="2" y1="14" x2="22" y2="14" />
+</svg>
+
+@code {
+    [Parameter] public bool IsRightButton { get; set; }
+
+    // The top half of the mouse is a half circle: arc from the top middle to one side, then close it
+    private string ButtonPath => IsRightButton
+        ? "M12 2 A10 10 0 0 1 22 12 V14 H12 Z"
+        : "M12 2 A10 10 0 0 0 2 12 V14 H12 Z";
+}

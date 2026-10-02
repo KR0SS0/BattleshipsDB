@@ -7,29 +7,19 @@
         <h1>Battleship</h1>
 
         <div class="controls">
-            @switch (phase)
+            @if (phase is GamePhase.PlacingShips or GamePhase.Playing)
             {
-                case GamePhase.PlacingShips:
-                    <button @onclick="Rotate">Rotate (@orientation)</button>
-                    <button @onclick="PlaceRestRandomly">Place the rest randomly</button>
-                    <button @onclick="ResetPlacement">Reset</button>
-                    <button @onclick="StartBattle" disabled="@(!game.PlayerBoard.AreAllShipsPlaced)">Start battle</button>
-                    <button @onclick="StopGame">Stop game</button>
-                    break;
-
-                case GamePhase.Playing:
-                    <button @onclick="StopGame">Stop game</button>
-                    break;
-
-                default:
-                    <select @bind="gameDifficulty">
-                        @foreach (var difficulty in Enum.GetValues<Difficulty>())
-                        {
-                            <option value="@difficulty">@difficulty</option>
-                        }
-                    </select>
-                    <button @onclick="StartNewGame">New game</button>
-                    break;
+                <button @onclick="StopGame">Stop game</button>
+            }
+            else
+            {
+                <select @bind="gameDifficulty">
+                    @foreach (var difficulty in Enum.GetValues<Difficulty>())
+                    {
+                        <option value="@difficulty">@difficulty</option>
+                    }
+                </select>
+                <button @onclick="StartNewGame">New game</button>
             }
         </div>
 
@@ -53,6 +43,18 @@
                        OnBoardLeave="ClearPreview" />
         </div>
     </section>
+
+    <footer class="hints">
+        @if (phase == GamePhase.PlacingShips)
+        {
+            <span class="hint"><MouseIcon /> Place ship</span>
+            <span class="hint"><MouseIcon IsRightButton="true" /> Rotate ship</span>
+        }
+        else if (phase == GamePhase.Playing)
+        {
+            <span class="hint"><MouseIcon /> Fire at enemy board</span>
+        }
+    </footer>
 </div>
 
 @code {
@@ -103,45 +105,33 @@
             return;
 
         var result = game.PlayerBoard.PlaceShip(new Ship(type, cell, orientation));
-        message = result.IsSuccess ? PlacementMessage() : result.Error.Message;
-        UpdatePreview();
-    }
+        if (!result.IsSuccess)
+        {
+            message = result.Error.Message;
+            return;
+        }
 
-    private void Rotate()
-    {
-        orientation = orientation == Orientation.Horizontal ? Orientation.Vertical : Orientation.Horizontal;
+        // The last ship starts the battle
+        if (game.PlayerBoard.AreAllShipsPlaced)
+        {
+            phase = GamePhase.Playing;
+            previewShip = null;
+            message = "Fleet ready. Fire at the enemy!";
+            return;
+        }
+
+        message = PlacementMessage();
         UpdatePreview();
     }
 
     private void RotateAt(Coordinate cell)
     {
-        hoveredCell = cell;
-        Rotate();
-    }
-
-    private void PlaceRestRandomly()
-    {
-        game.PlayerBoard.TryPlaceShipsRandomly(Random.Shared);
-        message = PlacementMessage();
-        UpdatePreview();
-    }
-
-    // A Board can't remove ships, so starting over means a fresh game with the same difficulty
-    private void ResetPlacement()
-    {
-        game = CreateGame(game.Difficulty);
-        message = PlacementMessage();
-        UpdatePreview();
-    }
-
-    private void StartBattle()
-    {
-        if (!game.PlayerBoard.AreAllShipsPlaced)
+        if (phase != GamePhase.PlacingShips)
             return;
 
-        phase = GamePhase.Playing;
-        previewShip = null;
-        message = "Fire at the enemy!";
+        orientation = orientation == Orientation.Horizontal ? Orientation.Vertical : Orientation.Horizontal;
+        hoveredCell = cell;
+        UpdatePreview();
     }
 
     private void ShowPreview(Coordinate cell)
@@ -164,8 +154,8 @@
     }
 
     private string PlacementMessage() => NextShipType is ShipType type
-        ? $"Place your {type} ({type.Length()} cells). Left click to place, right click to rotate."
-        : "All ships placed. Start the battle!";
+        ? $"Place your {type}."
+        : "All ships placed.";
 
     private void PlayRoundAndFireAt(Coordinate coordinate)
     {
