@@ -1,23 +1,43 @@
-# Publishes the Blazor game (src/Battleship.Web) to GitHub Pages on every push to main.
-# Live at https://kr0ss0.github.io/BattleshipsDB/
-name: Deploy web game
+# CI: build and test every push and pull request.
+# CD: when main is green, publish the Blazor game to https://kr0ss0.github.io/BattleshipsDB/
+name: CI/CD
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: 
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# A newer run on the same branch cancels the older one
 concurrency:
-  group: pages
+  group: ci-cd-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Install .NET (version from global.json)
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # Builds every project, then runs the unit tests and the integration tests.
+      # The integration tests start Postgres with Testcontainers, using the runner's Docker.
+      - name: Build and run tests
+        run: dotnet test -c Release
+
+  build-web:
+    name: Build web game
+    needs: test # Only runs when the tests passed
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       SITE_DIR: publish/wwwroot
@@ -49,8 +69,12 @@ jobs:
           include-hidden-files: true
 
   deploy:
-    needs: build
+    name: Deploy to GitHub Pages
+    needs: build-web
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
