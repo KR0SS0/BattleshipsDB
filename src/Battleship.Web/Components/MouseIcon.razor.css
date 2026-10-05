@@ -7,6 +7,6 @@
 }
 
 .button {
-    fill: #f97316;
+    fill: var(--sonar);
     stroke: none;
 }

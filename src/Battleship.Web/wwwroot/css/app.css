@@ -1,6 +1,79 @@
+/* Black Ops One by The Black-Ops Project Authors, SIL Open Font License (fonts/OFL.txt) */
+@font-face {
+    font-family: "Black Ops One";
+    src: url("../fonts/BlackOpsOne-Regular.woff2") format("woff2");
+    font-display: swap;
+}
+
+/* Naval theme colours, shared by every component */
+:root {
+    --navy-950: #050d1a;
+    --navy-900: #0a1a2f;
+    --navy-700: #12355b;
+    --panel: rgba(15, 23, 42, 0.72);
+    --panel-border: rgba(148, 163, 184, 0.22);
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --sonar: #38bdf8;
+    --sonar-dark: #0369a1;
+    --title-font: "Black Ops One", system-ui, sans-serif;
+}
+
 body {
     margin: 0;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: radial-gradient(ellipse at top, var(--navy-700) 0%, var(--navy-900) 45%, var(--navy-950) 100%) fixed;
+    min-height: 100dvh;
+}
+
+/* The router focuses the page's h1 after navigation (for screen readers); no visible ring needed */
+h1:focus {
+    outline: none;
+}
+
+/* Shown while .NET downloads, replaced by the app once it starts */
+.loading-screen {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+}
+
+.loading-title {
+    margin: 0;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: clamp(2.5rem, 9vw, 4.5rem);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 1.5rem rgba(56, 189, 248, 0.45);
+}
+
+.loading-bar {
+    width: min(18rem, 70vw);
+    height: 0.4rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.2);
+    overflow: hidden;
+}
+
+/* Blazor sets --blazor-load-percentage while it downloads */
+.loading-bar-fill {
+    width: var(--blazor-load-percentage, 0%);
+    height: 100%;
+    background: linear-gradient(90deg, var(--sonar-dark), var(--sonar));
+    transition: width 0.15s ease-out;
+}
+
+.loading-text {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.loading-text::after {
+    content: " " var(--blazor-load-percentage-text, "");
 }
 
 .valid.modified:not([type=checkbox]) {
@@ -44,40 +117,6 @@ body {
 
     .blazor-error-boundary::after {
         content: "An error has occurred."
-    }
-
-.loading-progress {
-    position: absolute;
-    display: block;
-    width: 8rem;
-    height: 8rem;
-    inset: 20vh 0 auto 0;
-    margin: 0 auto 0 auto;
-}
-
-    .loading-progress circle {
-        fill: none;
-        stroke: #e0e0e0;
-        stroke-width: 0.6rem;
-        transform-origin: 50% 50%;
-        transform: rotate(-90deg);
-    }
-
-        .loading-progress circle:last-child {
-            stroke: #1b6ec2;
-            stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
-            transition: stroke-dasharray 0.05s ease-in-out;
-        }
-
-.loading-progress-text {
-    position: absolute;
-    text-align: center;
-    font-weight: bold;
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
-}
-
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
     }
 
 code {

@@ -23,13 +23,24 @@
 .sidebar {
     justify-self: end;
     width: var(--sidebar-width);
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--panel-border);
+    border-radius: 0.75rem;
+    background: var(--panel);
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.35);
 }
 
 .sidebar h1 {
     margin: 0;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 1.7rem;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 1rem rgba(56, 189, 248, 0.35);
 }
 
 .controls {
@@ -41,13 +52,38 @@
 .controls button,
 .controls select {
     font: inherit;
-    padding: 0.4rem 0.9rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.5rem;
+}
+
+.controls button {
+    border: 1px solid var(--sonar);
+    background: linear-gradient(180deg, #0ea5e9, var(--sonar-dark));
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+}
+
+.controls button:hover {
+    filter: brightness(1.15);
+}
+
+.controls button:active {
+    transform: translateY(1px);
+}
+
+.controls select {
+    border: 1px solid var(--panel-border);
+    background: var(--navy-900);
+    color: var(--text);
 }
 
 .message {
     margin: 0;
     min-height: 4.5em;
-    white-space: pre-line; 
+    white-space: pre-line;
+    line-height: 1.5;
 }
 
 .boards {
@@ -57,9 +93,13 @@
 }
 
 .board-panel h2 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
+    margin: 0 0 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     text-align: center;
+    color: var(--text-muted);
 }
 
 /* Spans all three columns, under the boards */
@@ -69,7 +109,7 @@
     justify-content: center;
     align-items: center;
     gap: 2rem;
-    color: #334155;
+    color: var(--text-muted);
 }
 
 .hint {
@@ -81,7 +121,7 @@
 /* Portrait or narrow screens: controls on top, boards below, still no scrolling */
 @media (max-aspect-ratio: 1/1), (max-width: 50rem) {
     .game {
-        --cell-size: min((100dvh - 15rem - var(--footer-height)) / 22, (100vw - 2rem) / 11);
+        --cell-size: min((100dvh - 16.5rem - var(--footer-height)) / 22, (100vw - 2rem) / 11);
         grid-template-columns: 1fr;
         grid-template-rows: auto auto var(--footer-height);
         align-content: center;
@@ -94,11 +134,17 @@
         width: auto;
         align-items: center;
         gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
         text-align: center;
     }
 
     .sidebar h1 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    .message {
+        min-height: 3em;
+        font-size: 0.85rem;
     }
 
     .controls {
