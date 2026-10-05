@@ -1,4 +1,5 @@
 @page "/"
+@inject SoundService Sound
 
 <PageTitle>Battleship</PageTitle>
 
@@ -9,7 +10,7 @@
         <div class="controls">
             @if (phase is GamePhase.PlacingShips or GamePhase.Playing)
             {
-                <button @onclick="StopGame">Stop game</button>
+                <button class="button" @onclick="StopGame">Stop game</button>
             }
             else
             {
@@ -19,7 +20,7 @@
                         <option value="@difficulty">@difficulty</option>
                     }
                 </select>
-                <button @onclick="StartNewGame">New game</button>
+                <button class="button" @onclick="StartNewGame">New game</button>
             }
         </div>
 
@@ -31,6 +32,7 @@
             <h2>Enemy waters</h2>
             <BoardGrid Board="game.OpponentBoard"
                        IsActive="phase == GamePhase.Playing"
+                       AreShipsVisible="phase == GamePhase.Finished"
                        OnCellClick="PlayRoundAndFireAt" />
         </div>
 
@@ -60,6 +62,11 @@
     </footer>
 </div>
 
+@if (isGameOverVisible)
+{
+    <GameOverScreen Game="game" OnContinue="CloseGameOver" />
+}
+
 @code {
     private string message = "Choose a difficulty and start a new game.";
     private Game game = new(); // Empty boards until the first game starts
@@ -70,6 +77,10 @@
     private const int EnemyDelayMinMs = 100;
     private const int EnemyDelayMaxMs = 250;
     private bool isEnemyAiming;
+
+    // The end screen waits a moment, so the final explosion can be seen first
+    private const int GameOverDelayMs = 900;
+    private bool isGameOverVisible;
 
     // Ship placement
     private Orientation orientation = Orientation.Horizontal;
@@ -90,7 +101,23 @@
         game = CreateGame(gameDifficulty);
         phase = GamePhase.PlacingShips;
         orientation = Orientation.Horizontal;
+        isGameOverVisible = false;
         message = PlacementMessage();
+    }
+
+    private void CloseGameOver() => isGameOverVisible = false;
+
+    private async Task FinishGameAsync()
+    {
+        phase = GamePhase.Finished;
+
+        var finishedGame = game;
+        await Task.Delay(GameOverDelayMs);
+        if (game != finishedGame)
+            return; // A new game was started during the pause
+
+        isGameOverVisible = true;
+        await Sound.PlayAsync(game.Winner == Side.Player ? GameSound.Victory : GameSound.Defeat);
     }
 
     private void StopGame()
@@ -107,7 +134,7 @@
         return game;
     }
 
-    private void PlaceNextShip(Coordinate cell)
+    private async Task PlaceNextShip(Coordinate cell)
     {
         if (phase != GamePhase.PlacingShips || NextShipType is not ShipType type)
             return;
@@ -116,6 +143,7 @@
         if (!result.IsSuccess)
         {
             message = result.Error.Message;
+            await Sound.PlayAsync(GameSound.Invalid);
             return;
         }
 
@@ -125,11 +153,14 @@
             phase = GamePhase.Playing;
             previewShip = null;
             message = "Fleet ready. Fire at the enemy!";
-            return;
+        }
+        else
+        {
+            message = PlacementMessage();
+            UpdatePreview();
         }
 
-        message = PlacementMessage();
-        UpdatePreview();
+        await Sound.PlayAsync(GameSound.Place);
     }
 
     private void RotateAt(Coordinate cell)
@@ -174,20 +205,27 @@
         if (!playerShot.IsSuccess)
         {
             message = playerShot.Error.Message;
+            await Sound.PlayAsync(GameSound.Invalid);
             return;
         }
 
-        message = $"Fired at {playerShot.Value.Coordinate}: {OutcomeMessage(playerShot.Value)}.";
-        if (game.Winner == Side.Player)
-        {
-            message += "\nEnemy eliminated! Good job captain!";
-            phase = GamePhase.Finished;
-            return;
-        }
-
-        // Blazor redraws at the first await, so the player's shot shows before the enemy fires
+        // Ignore clicks until the enemy has fired back. Set before any await,
+        // because every await lets Blazor handle other clicks in the meantime.
         isEnemyAiming = true;
         var gameBeforeDelay = game;
+
+        message = $"Fired at {playerShot.Value.Coordinate}: {OutcomeMessage(playerShot.Value)}.";
+        await Sound.PlayAsync(SoundFor(playerShot.Value));
+
+        if (game.Winner == Side.Player)
+        {
+            isEnemyAiming = false;
+            message += "\nEnemy eliminated! Good job captain!";
+            await FinishGameAsync();
+            return;
+        }
+
+        // Blazor redraws at each await, so the player's shot shows before the enemy fires
         await Task.Delay(Random.Shared.Next(EnemyDelayMinMs, EnemyDelayMaxMs + 1));
         isEnemyAiming = false;
 
@@ -197,14 +235,25 @@
 
         var opponentShot = game.OpponentTurn(Random.Shared);
         if (opponentShot is not null)
+        {
             message += $"\nEnemy fired back at {opponentShot.Coordinate}: {OutcomeMessage(opponentShot)}.";
+            await Sound.PlayAsync(SoundFor(opponentShot));
+        }
 
         if (game.Winner == Side.Opponent)
         {
             message += "\nWe will get them next time...";
-            phase = GamePhase.Finished;
+            await FinishGameAsync();
         }
     }
+
+    private static GameSound SoundFor(Shot shot) => shot.Outcome switch
+    {
+        ShotOutcome.Miss => GameSound.Miss,
+        ShotOutcome.Hit => GameSound.Hit,
+        ShotOutcome.Sunk => GameSound.Sunk,
+        _ => throw new ArgumentOutOfRangeException(nameof(shot), shot.Outcome, null)
+    };
 
     private static string OutcomeMessage(Shot shot) => shot.Outcome switch
     {

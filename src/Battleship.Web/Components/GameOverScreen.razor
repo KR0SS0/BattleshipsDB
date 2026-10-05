@@ -1,0 +1,45 @@
+<div class="backdrop">
+    <div class="dialog @(IsVictory ? "victory" : "defeat")" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+        <h2 id="game-over-title">@(IsVictory ? "Victory" : "Defeat")</h2>
+        <p class="subtitle">
+            @(IsVictory ? "The enemy fleet is at the bottom of the sea." : "Your fleet has been sunk.")
+        </p>
+
+        <dl class="stats">
+            <div><dt>Shots fired</dt><dd>@shotsFired</dd></div>
+            <div><dt>Accuracy</dt><dd>@accuracy%</dd></div>
+            <div><dt>Enemy ships sunk</dt><dd>@enemyShipsSunk / @Game.OpponentBoard.Ships.Count</dd></div>
+            <div><dt>Ships lost</dt><dd>@shipsLost / @Game.PlayerBoard.Ships.Count</dd></div>
+        </dl>
+
+        <p class="difficulty">Difficulty: @Game.Difficulty</p>
+
+        <div class="actions">
+            <button class="button" @onclick="() => OnContinue.InvokeAsync()">Continue</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Game Game { get; set; } = default!;
+    [Parameter] public EventCallback OnContinue { get; set; }
+
+    private bool IsVictory => Game.Winner == Side.Player;
+
+    private int shotsFired;
+    private int accuracy;
+    private int enemyShipsSunk;
+    private int shipsLost;
+
+    // The player's shots are the ones the opponent's board received
+    protected override void OnParametersSet()
+    {
+        var playerShots = Game.OpponentBoard.ShotHistory;
+        var hits = playerShots.Count(shot => shot.Outcome != ShotOutcome.Miss);
+
+        shotsFired = playerShots.Count;
+        accuracy = shotsFired == 0 ? 0 : (int)Math.Round(100.0 * hits / shotsFired);
+        enemyShipsSunk = Game.OpponentBoard.Ships.Count(Game.OpponentBoard.IsShipSunk);
+        shipsLost = Game.PlayerBoard.Ships.Count(Game.PlayerBoard.IsShipSunk);
+    }
+}

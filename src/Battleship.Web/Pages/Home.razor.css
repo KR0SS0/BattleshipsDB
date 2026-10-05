@@ -29,7 +29,6 @@
     gap: 1rem;
     padding: 1.25rem;
     border: 1px solid var(--panel-border);
-    border-radius: 0.75rem;
     background: var(--panel);
     box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.35);
 }
@@ -49,31 +48,9 @@
     gap: 0.5rem;
 }
 
-.controls button,
 .controls select {
     font: inherit;
     padding: 0.5rem 0.9rem;
-    border-radius: 0.5rem;
-}
-
-.controls button {
-    border: 1px solid var(--sonar);
-    background: linear-gradient(180deg, #0ea5e9, var(--sonar-dark));
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: filter 0.15s, transform 0.1s;
-}
-
-.controls button:hover {
-    filter: brightness(1.15);
-}
-
-.controls button:active {
-    transform: translateY(1px);
-}
-
-.controls select {
     border: 1px solid var(--panel-border);
     background: var(--navy-900);
     color: var(--text);
