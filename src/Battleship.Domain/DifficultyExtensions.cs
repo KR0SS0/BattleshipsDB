@@ -1,6 +1,6 @@
 namespace Battleship.Domain;
 
-public static class DifficultyExtension {
+public static class DifficultyExtensions {
     public static IShotStrategy ShotStrategy(this Difficulty difficulty)
     {
         return difficulty switch

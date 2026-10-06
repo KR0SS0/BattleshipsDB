@@ -27,7 +27,7 @@ public sealed class Game
 
     public bool IsOver => Winner is not null;
 
-    public Result<Shot> Shoot(Coordinate coordinate)
+    internal Result<Shot> Shoot(Coordinate coordinate)
     {
         if (IsOver)
             return Result<Shot>.Failure(GameErrors.GameOver);
