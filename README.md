@@ -2,7 +2,7 @@
 
 [![CI/CD](https://github.com/KR0SS0/BattleshipsDB/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/KR0SS0/BattleshipsDB/actions/workflows/ci-cd.yml)
 
-Battleship in the browser, built with C# and .NET 10.
+Battleship in the browser, built with C# and .NET 10. With an ASP.NET Core API and PostgreSQL behind it.
 
 **[Play it here](https://kr0ss0.github.io/BattleshipsDB/)**
 
