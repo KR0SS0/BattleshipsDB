@@ -35,6 +35,14 @@ I measured the difference by simulating 250 games per opponent. To sink a whole 
 
 GitHub Actions builds and tests everything on every push, and only deploys the game if the tests pass.
 
+## Use of AI
+
+I used Claude Code.
+
+- `Battleship.Domain`, `Battleship.Infrastructure` and `Battleship.Api` are my own code. I let AI review my work to find issues or gaps, and to optimize it by shortening methods while keeping my logic.
+- `Battleship.Web` was mostly written by AI: the layout, styling, animations and sound.
+- For tests, I wrote the tests for a method myself and then let AI write the missing ones.
+
 ## Credits
 
 - Font: Black Ops One, SIL Open Font License
