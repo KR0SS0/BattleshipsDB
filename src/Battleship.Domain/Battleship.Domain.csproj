@@ -3,6 +3,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Battleship.Infrastructure" />
     <InternalsVisibleTo Include="Battleship.Domain.Tests" />
+    <InternalsVisibleTo Include="Battleship.Api.IntegrationTests" />
   </ItemGroup>
 
 </Project>
